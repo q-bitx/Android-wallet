@@ -333,7 +333,7 @@ fun WalletScreen(
                 OutlinedTextField(
                     value = importKey,
                     onValueChange = { importKey = it },
-                    placeholder = { Text(stringResource(R.string.import_placeholder), color = QBXOnSurfaceDim.copy(alpha = 0.5f)) },
+                    placeholder = { Text("24 English seed words or legacy key backup", color = QBXOnSurfaceDim.copy(alpha = 0.5f)) },
                     modifier = Modifier.fillMaxWidth(),
                     minLines = 3,
                     maxLines = 5,
@@ -353,7 +353,7 @@ fun WalletScreen(
                     onClick = { onImportWallet(importKey) },
                     modifier = Modifier.fillMaxWidth().height(48.dp),
                     shape = RoundedCornerShape(12.dp),
-                    enabled = importKey.contains(":") && !state.isLoading,
+                    enabled = (importKey.contains(":") || importKey.trim().split(Regex("\\s+")).size == 24) && !state.isLoading,
                     colors = ButtonDefaults.buttonColors(containerColor = QBXPurple)
                 ) {
                     if (state.isLoading) {
@@ -1131,7 +1131,7 @@ fun SendScreen(
                 text = {
                     Column {
                         Text(stringResource(R.string.confirm_to), fontSize = 12.sp, color = QBXOnSurfaceDim)
-                        Text(toAddress.take(24) + "...", fontSize = 13.sp, fontFamily = FontFamily.Monospace, color = QBXOnSurface)
+                        Text(toAddress, fontSize = 13.sp, fontFamily = FontFamily.Monospace, color = QBXOnSurface)
                         Spacer(Modifier.height(8.dp))
                         Text(stringResource(R.string.confirm_amount), fontSize = 12.sp, color = QBXOnSurfaceDim)
                         Text("$amount QBX", fontWeight = FontWeight.Bold, fontSize = 18.sp, color = QBXPurple)
@@ -1626,7 +1626,7 @@ fun SettingsScreen(
                 if (state.hasWallet) {
                     Text(stringResource(R.string.settings_backup_title), fontSize = 16.sp, fontWeight = FontWeight.SemiBold, color = QBXOnSurface)
                     Spacer(Modifier.height(4.dp))
-                    Text(stringResource(R.string.settings_backup_subtitle), fontSize = 13.sp, color = QBXOnSurfaceDim)
+                    Text("Seed: 24 words. Recovery format: qbx-pqhd-v1. Keep offline; never share.", fontSize = 13.sp, color = QBXOnSurfaceDim)
 
                     Spacer(Modifier.height(16.dp))
 

@@ -29,7 +29,7 @@ import javax.net.ssl.X509TrustManager
  * No wallet operations — keys never leave the device.
  */
 class NodeRpcClient(
-    private var rpcUrl: String = "https://qbitx.solopool.site/"
+    private var rpcUrl: String = "https://rpc.qbitx.org/"
 ) {
     companion object {
         fun normalizeRpcUrl(rawUrl: String): String {
@@ -47,6 +47,9 @@ class NodeRpcClient(
             val httpUrl = candidate.toHttpUrlOrNull()
                 ?: throw RpcException("Ungültige RPC-URL. Bitte http:// oder https:// mit gültigem Host angeben.")
 
+            if (!httpUrl.isHttps || httpUrl.username.isNotEmpty() || httpUrl.password.isNotEmpty() || httpUrl.fragment != null) {
+                throw RpcException("RPC requires HTTPS without embedded credentials or fragments")
+            }
             if (httpUrl.host.isBlank()) {
                 throw RpcException("Ungültige RPC-URL. Host fehlt.")
             }
@@ -58,31 +61,21 @@ class NodeRpcClient(
     private val gson = Gson()
     private val JSON = "application/json".toMediaType()
 
-    // Trust all certificates (needed for self-signed certs on private nodes)
-    private val trustAllManager = object : X509TrustManager {
-        override fun checkClientTrusted(chain: Array<X509Certificate>, authType: String) {}
-        override fun checkServerTrusted(chain: Array<X509Certificate>, authType: String) {}
-        override fun getAcceptedIssuers(): Array<X509Certificate> = arrayOf()
-    }
+    // Platform trust store and hostname verification are mandatory.
+    private val client = OkHttpClient.Builder()
+        .connectTimeout(20, TimeUnit.SECONDS)
+        .readTimeout(60, TimeUnit.SECONDS)
+        .followRedirects(false)
+        .followSslRedirects(false)
+        .build()
 
-    private val client: OkHttpClient = run {
-        val sslContext = SSLContext.getInstance("TLS")
-        sslContext.init(null, arrayOf<TrustManager>(trustAllManager), SecureRandom())
-        OkHttpClient.Builder()
-            .connectTimeout(15, TimeUnit.SECONDS)
-            .readTimeout(120, TimeUnit.SECONDS)
-            .sslSocketFactory(sslContext.socketFactory, trustAllManager)
-            .hostnameVerifier { _, _ -> true }
-            .build()
-    }
-
-    private var requestId = 0
+    private val requestId = java.util.concurrent.atomic.AtomicInteger(0)
 
     fun configure(rpcUrl: String) {
         this.rpcUrl = normalizeRpcUrl(rpcUrl)
     }
 
-    private fun buildUrl(): String = rpcUrl
+    private fun buildUrl(): String = normalizeRpcUrl(rpcUrl)
 
     /**
      * Translate a non-2xx HTTP response into a clear, user-facing RpcException.
@@ -107,7 +100,7 @@ class NodeRpcClient(
 
     /** Execute a JSON-RPC call and return the result as JsonObject. */
     suspend fun call(method: String, vararg params: Any?): JsonObject = withContext(Dispatchers.IO) {
-        val id = ++requestId
+        val id = requestId.incrementAndGet()
         val body = gson.toJson(mapOf(
             "jsonrpc" to "2.0",
             "id" to id,
@@ -120,13 +113,16 @@ class NodeRpcClient(
             .post(body.toRequestBody(JSON))
 
         val request = requestBuilder.build()
-        val response = client.newCall(request).execute()
-        val responseBody = response.body?.string()
+        val (httpCode, responseBody) = client.newCall(request).execute().use { response ->
+            val source = response.body?.source() ?: throw RpcException("Empty RPC response")
+            if (source.request(8_000_001L)) throw RpcException("RPC response exceeds 8 MB limit")
+            response.code to source.readUtf8()
+        }
 
         // Give a clear error for common HTTP failures (proxy 413, wrong path 405, etc.)
         // before attempting JSON parse — otherwise users see raw nginx HTML.
-        if (!response.isSuccessful) {
-            throw RpcException(httpErrorMessage(response.code, responseBody))
+        if (httpCode !in 200..299) {
+            throw RpcException(httpErrorMessage(httpCode, responseBody))
         }
 
         if (responseBody == null) {
@@ -146,6 +142,7 @@ class NodeRpcClient(
             throw RpcException("RPC-Fehler $code: $message")
         }
 
+        if (json.get("id")?.asInt != id || !json.has("result")) throw RpcException("Mismatched or incomplete RPC response")
         json
     }
 
@@ -162,7 +159,8 @@ class NodeRpcClient(
         }
         val result = call("scantxoutset", "start", scanObjects)
         val obj = result.getAsJsonObject("result")
-            ?: return ScanResult(totalAmount = 0.0, unspents = emptyList())
+            ?: throw RpcException("Invalid UTXO scan response")
+        if (obj.get("success")?.asBoolean != true) throw RpcException("UTXO scan did not complete")
 
         data class RawUtxo(val txid: String, val vout: Int, val amount: Double, val confs: Int, val scriptPubKey: String, val desc: String)
 
@@ -218,8 +216,8 @@ class NodeRpcClient(
             val tx = result.getAsJsonObject("result")
             val vin = tx?.getAsJsonArray("vin")
             vin != null && vin.size() > 0 && vin[0].asJsonObject.has("coinbase")
-        } catch (_: Exception) {
-            false
+        } catch (e: Exception) {
+            throw RpcException("Cannot verify coinbase maturity: ${e.message}")
         }
     }
 
@@ -234,7 +232,7 @@ class NodeRpcClient(
         changeAddress: String?,
         changeAmount: Double?
     ): String = withContext(Dispatchers.IO) {
-        val id = ++requestId
+        val id = requestId.incrementAndGet()
 
         val inputsArr = JsonArray()
         for (utxo in inputs) {

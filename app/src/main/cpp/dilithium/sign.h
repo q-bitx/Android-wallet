@@ -10,6 +10,9 @@
 #ifndef DILITHIUM_NAMESPACE
 #define DILITHIUM_NAMESPACE(s) pqcrystals_dilithium2_ref_##s
 #endif
+#define crypto_sign_seed_keypair DILITHIUM_NAMESPACE(seed_keypair)
+int crypto_sign_seed_keypair(uint8_t *pk, uint8_t *sk, const uint8_t seed[SEEDBYTES]);
+
 #define crypto_sign_keypair DILITHIUM_NAMESPACE(keypair)
 int crypto_sign_keypair(uint8_t *pk, uint8_t *sk);
 

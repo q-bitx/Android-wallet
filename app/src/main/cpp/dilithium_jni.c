@@ -133,3 +133,28 @@ JNIEXPORT jint JNICALL
 Java_org_qbitx_wallet_crypto_DilithiumNative_getSignatureBytes(JNIEnv *env, jobject thiz) {
     return CRYPTO_BYTES;
 }
+
+/* Explicit deterministic input; never override the process RNG. */
+JNIEXPORT jobjectArray JNICALL
+Java_org_qbitx_wallet_crypto_DilithiumNative_generateKeypairFromSeed(JNIEnv *env, jobject thiz, jbyteArray input) {
+    if (input == NULL || (*env)->GetArrayLength(env, input) != SEEDBYTES) return NULL;
+    uint8_t seed[SEEDBYTES], pk[CRYPTO_PUBLICKEYBYTES], sk[CRYPTO_SECRETKEYBYTES];
+    (*env)->GetByteArrayRegion(env, input, 0, SEEDBYTES, (jbyte*)seed);
+    int rc = crypto_sign_seed_keypair(pk, sk, seed);
+    volatile uint8_t *wipe = seed;
+    for (size_t i=0; i<sizeof(seed); ++i) wipe[i]=0;
+    if (rc != 0) return NULL;
+    jclass cls = (*env)->FindClass(env, "[B");
+    jobjectArray result = (*env)->NewObjectArray(env, 2, cls, NULL);
+    jbyteArray pub = (*env)->NewByteArray(env, CRYPTO_PUBLICKEYBYTES);
+    jbyteArray priv = (*env)->NewByteArray(env, CRYPTO_SECRETKEYBYTES);
+    if (result && pub && priv) {
+        (*env)->SetByteArrayRegion(env, pub, 0, CRYPTO_PUBLICKEYBYTES, (jbyte*)pk);
+        (*env)->SetByteArrayRegion(env, priv, 0, CRYPTO_SECRETKEYBYTES, (jbyte*)sk);
+        (*env)->SetObjectArrayElement(env, result, 0, pub);
+        (*env)->SetObjectArrayElement(env, result, 1, priv);
+    }
+    wipe = sk;
+    for (size_t i=0; i<sizeof(sk); ++i) wipe[i]=0;
+    return result;
+}

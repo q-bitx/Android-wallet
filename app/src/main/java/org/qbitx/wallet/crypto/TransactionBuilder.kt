@@ -125,18 +125,21 @@ object TransactionBuilder {
 
     /** Parse a raw transaction hex string into a RawTransaction struct. */
     fun parseRawTx(hex: String): RawTransaction {
+        require(hex.length <= 800_000 && hex.length % 2 == 0 && hex.all { it in "0123456789abcdefABCDEF" }) { "Invalid transaction encoding" }
         val bytes = hexToBytes(hex)
         val buf = ByteBuffer.wrap(bytes).order(ByteOrder.LITTLE_ENDIAN)
 
         val version = buf.int
 
         val numInputs = readVarInt(buf)
+        require(numInputs in 1..60) { "Invalid input count" }
         val inputs = mutableListOf<TxInput>()
         for (i in 0 until numInputs.toInt()) {
             val txid = ByteArray(32)
             buf.get(txid)
             val vout = buf.int.toLong() and 0xFFFFFFFFL
             val scriptLen = readVarInt(buf)
+            require(scriptLen in 0..10000 && scriptLen <= buf.remaining())
             val scriptSig = ByteArray(scriptLen.toInt())
             buf.get(scriptSig)
             val sequence = buf.int.toLong() and 0xFFFFFFFFL
@@ -144,16 +147,19 @@ object TransactionBuilder {
         }
 
         val numOutputs = readVarInt(buf)
+        require(numOutputs in 1..2) { "Invalid output count" }
         val outputs = mutableListOf<TxOutput>()
         for (i in 0 until numOutputs.toInt()) {
             val amount = buf.long
             val scriptLen = readVarInt(buf)
+            require(scriptLen in 0..10000 && scriptLen <= buf.remaining())
             val scriptPubKey = ByteArray(scriptLen.toInt())
             buf.get(scriptPubKey)
             outputs.add(TxOutput(amount, scriptPubKey))
         }
 
         val locktime = buf.int.toLong() and 0xFFFFFFFFL
+        require(!buf.hasRemaining()) { "Trailing transaction data" }
         return RawTransaction(version, inputs, outputs, locktime)
     }
 

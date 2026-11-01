@@ -18,7 +18,6 @@ add_library(dilithium3 STATIC
 target_include_directories(dilithium3 PUBLIC dilithium)
 target_compile_definitions(dilithium3 PUBLIC
     DILITHIUM_MODE=3
-    DILITHIUM_NAMESPACE=pqcrystals_dilithium3_ref_
 )
 
 # JNI bridge
@@ -27,5 +26,4 @@ target_link_libraries(qbitx_crypto dilithium3 log)
 target_include_directories(qbitx_crypto PRIVATE dilithium)
 target_compile_definitions(qbitx_crypto PRIVATE
     DILITHIUM_MODE=3
-    DILITHIUM_NAMESPACE=pqcrystals_dilithium3_ref_
 )

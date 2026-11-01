@@ -9,6 +9,7 @@ import com.google.gson.reflect.TypeToken
 import org.qbitx.wallet.crypto.AddressUtils
 import org.qbitx.wallet.crypto.DilithiumNative
 import java.security.MessageDigest
+import org.qbitx.wallet.crypto.SeedWallet
 
 data class WalletInfo(val id: Int, val name: String, val address: String)
 
@@ -84,8 +85,11 @@ class KeyManager(context: Context) {
 
     fun createWallet(name: String = ""): WalletInfo {
         val id = prefs.getInt("next_id", 0)
-        val keys = dilithium.generateKeypair()
-            ?: throw RuntimeException("Dilithium key generation failed")
+        val mnemonic = SeedWallet.generate()
+        val seed = SeedWallet.keySeed(mnemonic)
+        val keys = try { dilithium.generateKeypairFromSeed(seed) }
+            finally { seed.fill(0) }
+        requireNotNull(keys) { "Dilithium key generation failed" }
 
         val pubkey = keys[0]
         val privkey = keys[1]
@@ -100,9 +104,31 @@ class KeyManager(context: Context) {
             .putString("wallet_ids", ids.joinToString(","))
             .putInt("next_id", id + 1)
             .putInt("active_id", id)
-            .apply()
-
+            .putString("w${id}_seed", mnemonic)
+            .putString("w${id}_derivation", SeedWallet.VERSION)
+            .also { check(it.commit()) { "Wallet storage failed" } }
+        privkey.fill(0)
         return WalletInfo(id, walletName, address)
+    }
+
+    fun pendingSeed(): String? = if (prefs.getBoolean("w${getActiveWalletId()}_seed_confirmed", false)) null else exportSeed()
+    fun confirmSeed() { check(prefs.edit().putBoolean("w${getActiveWalletId()}_seed_confirmed", true).commit()) }
+
+    fun exportSeed(): String? = prefs.getString("w${getActiveWalletId()}_seed", null)
+
+    fun restoreSeed(text: String, name: String = ""): WalletInfo {
+        val mnemonic = SeedWallet.validate(text)
+        val seed = SeedWallet.keySeed(mnemonic)
+        val keys = try { requireNotNull(dilithium.generateKeypairFromSeed(seed)) }
+            finally { seed.fill(0) }
+        return try {
+            val wallet = importWallet(Base64.encodeToString(keys[1], Base64.NO_WRAP) + ":" +
+                Base64.encodeToString(keys[0], Base64.NO_WRAP), name)
+            check(prefs.edit().putString("w${wallet.id}_seed", mnemonic)
+                .putString("w${wallet.id}_derivation", SeedWallet.VERSION)
+                .putBoolean("w${wallet.id}_seed_confirmed", true).commit()) { "Seed storage failed" }
+            wallet
+        } finally { keys[1].fill(0) }
     }
 
     fun renameWallet(id: Int, newName: String) {
@@ -125,9 +151,7 @@ class KeyManager(context: Context) {
         val id = getActiveWalletId(); if (id < 0) return null
         val b64 = prefs.getString("w${id}_priv", null) ?: return null
         val priv = Base64.decode(b64, Base64.NO_WRAP)
-        val sig = dilithium.sign(message, priv)
-        priv.fill(0)
-        return sig
+        return try { dilithium.sign(message, priv) } finally { priv.fill(0) }
     }
 
     fun verify(signature: ByteArray, message: ByteArray): Boolean {
@@ -205,6 +229,9 @@ class KeyManager(context: Context) {
             .remove("w${id}_pub")
             .remove("w${id}_priv")
             .remove("w${id}_name")
+            .remove("w${id}_seed_confirmed")
+            .remove("w${id}_seed")
+            .remove("w${id}_derivation")
             .putString("wallet_ids", if (ids.isEmpty()) "" else ids.joinToString(","))
         if (getActiveWalletId() == id) {
             editor.putInt("active_id", ids.firstOrNull() ?: -1)

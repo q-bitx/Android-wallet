@@ -13,15 +13,17 @@ val keystoreProperties = Properties().apply {
 }
 
 android {
+    ndkVersion = "26.3.11579264"
     namespace = "org.qbitx.wallet"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "org.qbitx.wallet"
+        applicationId = "org.qbitx.wallet.preview"
         minSdk = 26
         targetSdk = 36
-        versionCode = 25
-        versionName = "1.5.0"
+        versionCode = 26
+        versionName = "1.6.0-seed-preview"
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         ndk {
             abiFilters += listOf("arm64-v8a", "armeabi-v7a", "x86_64")
@@ -45,6 +47,8 @@ android {
             }
         }
     }
+
+    testOptions { unitTests.isReturnDefaultValues = true }
 
     buildTypes {
         release {
@@ -131,6 +135,11 @@ dependencies {
 
     // DataStore for preferences
     implementation("androidx.datastore:datastore-preferences:1.0.0")
+
+    testImplementation("junit:junit:4.13.2")
+    androidTestImplementation("androidx.test.ext:junit:1.1.5")
+    androidTestImplementation("androidx.test:runner:1.5.2")
+    testImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")
 
     // Debug
     debugImplementation("androidx.compose.ui:ui-tooling")

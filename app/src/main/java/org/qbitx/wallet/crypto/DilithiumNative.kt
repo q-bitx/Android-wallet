@@ -12,6 +12,8 @@ class DilithiumNative {
     }
 
     /** Generate a Dilithium3 keypair. Returns [publicKey, secretKey] as byte arrays. */
+    external fun generateKeypairFromSeed(seed: ByteArray): Array<ByteArray>?
+
     external fun generateKeypair(): Array<ByteArray>?
 
     /** Sign a message with the secret key. Returns the detached signature. */

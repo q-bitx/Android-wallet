@@ -1,4 +1,5 @@
 #include <stdint.h>
+#include <string.h>
 #include "params.h"
 #include "sign.h"
 #include "packing.h"
@@ -21,6 +22,15 @@
 * Returns 0 (success)
 **************************************************/
 int crypto_sign_keypair(uint8_t *pk, uint8_t *sk) {
+  uint8_t seed[SEEDBYTES];
+  randombytes(seed, sizeof(seed));
+  int rc = crypto_sign_seed_keypair(pk, sk, seed);
+  volatile uint8_t *p = seed;
+  for(size_t i = 0; i < sizeof(seed); ++i) p[i] = 0;
+  return rc;
+}
+
+int crypto_sign_seed_keypair(uint8_t *pk, uint8_t *sk, const uint8_t seed[SEEDBYTES]) {
   uint8_t seedbuf[2*SEEDBYTES + CRHBYTES];
   uint8_t tr[TRBYTES];
   const uint8_t *rho, *rhoprime, *key;
@@ -29,7 +39,7 @@ int crypto_sign_keypair(uint8_t *pk, uint8_t *sk) {
   polyveck s2, t1, t0;
 
   /* Get randomness for rho, rhoprime and key */
-  randombytes(seedbuf, SEEDBYTES);
+  memcpy(seedbuf, seed, SEEDBYTES);
   seedbuf[SEEDBYTES+0] = K;
   seedbuf[SEEDBYTES+1] = L;
   shake256(seedbuf, 2*SEEDBYTES + CRHBYTES, seedbuf, SEEDBYTES+2);
@@ -62,6 +72,8 @@ int crypto_sign_keypair(uint8_t *pk, uint8_t *sk) {
   /* Compute H(rho, t1) and write secret key */
   shake256(tr, TRBYTES, pk, CRYPTO_PUBLICKEYBYTES);
   pack_sk(sk, rho, tr, key, &t0, &s1, &s2);
+  volatile uint8_t *wipe = seedbuf;
+  for(size_t i = 0; i < sizeof(seedbuf); ++i) wipe[i] = 0;
 
   return 0;
 }
