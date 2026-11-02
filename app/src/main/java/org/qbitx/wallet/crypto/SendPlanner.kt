@@ -22,12 +22,8 @@ object SendPlanner {
     /** Safety margin below TransactionBuilder.MAX_STANDARD_TX_WEIGHT. */
     const val MAX_BATCH_WEIGHT = 380_000L
 
-    /**
-     * Upper bound on inputs per batch regardless of weight. A transaction with 60 native PQ
-     * witness inputs (weight ~357,000) is verified against a Q-BitX node; 64 would exceed
-     * MAX_BATCH_WEIGHT anyway.
-     */
-    const val MAX_INPUTS_PER_BATCH = 60
+    /** Eight PQ inputs keep hex-encoded requests below the public proxy's 100 KiB cap. */
+    const val MAX_INPUTS_PER_BATCH = 8
 
     /** A spendable output. [ref] is an opaque index back into the caller's UTXO list. */
     data class Coin(val amountSat: Long, val isWitness: Boolean, val ref: Int)

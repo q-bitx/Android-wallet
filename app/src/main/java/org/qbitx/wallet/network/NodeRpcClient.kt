@@ -108,6 +108,9 @@ class NodeRpcClient(
             "params" to params.toList()
         ))
 
+        if (body.toByteArray(Charsets.UTF_8).size > 102_400) {
+            throw RpcException("Transaction exceeds the public RPC request limit. Send a smaller amount.")
+        }
         val requestBuilder = Request.Builder()
             .url(buildUrl())
             .post(body.toRequestBody(JSON))
@@ -412,71 +415,17 @@ class NodeRpcClient(
         return false
     }
 
-    /**
-     * Discover all transaction IDs for an address using the server-side scanblocks endpoint.
-     * Privacy-preserving: no address is sent to the server — filtering happens locally.
-     * Only scans blocks between lastScannedHeight+1 and blockHeight (incremental).
-     * Returns Pair(txids, highestBlockScanned) so caller knows how far we got.
-     */
+    /** History cursor remains unchanged while the public RPC lacks a compatible history index. */
     suspend fun discoverAllTxIds(
         address: String,
         blockHeight: Int = 0,
         lastScannedHeight: Int = 0,
         onProgress: ((Int, Int) -> Unit)? = null
     ): Pair<List<String>, Int> {
-        if (blockHeight <= 0) return Pair(emptyList(), lastScannedHeight)
-
-        val startHeight = if (lastScannedHeight > 0) lastScannedHeight + 1 else 0
-        if (startHeight > blockHeight) return Pair(emptyList(), lastScannedHeight)
-
-        val found = mutableSetOf<String>()
-        val batchSize = 2000
-        var from = startHeight
-        val totalBlocks = blockHeight - startHeight + 1
-        var highestScanned = lastScannedHeight
-
-        while (from <= blockHeight) {
-            coroutineScope { ensureActive() }
-            val to = minOf(from + batchSize - 1, blockHeight)
-            var batch: List<String>? = null
-            for (attempt in 1..3) {
-                batch = scanBlocksBatch(from, to, address)
-                if (batch != null) break
-                if (attempt < 3) kotlinx.coroutines.delay(2000L * attempt)
-            }
-            if (batch == null) break
-            found.addAll(batch)
-            highestScanned = to
-            onProgress?.invoke(to - startHeight + 1, totalBlocks)
-            from = to + 1
-        }
-
-        return Pair(found.toList(), highestScanned)
-    }
-
-    /**
-     * Fetch a range of blocks from the server-side scanblocks endpoint
-     * and filter locally for transactions involving the given address.
-     * Returns null on failure (rate limit / network error).
-     */
-    private suspend fun scanBlocksBatch(fromHeight: Int, toHeight: Int, address: String): List<String>? {
-        return try {
-            val result = call("scanblocks", fromHeight, toHeight)
-            val obj = result.getAsJsonObject("result") ?: return emptyList()
-            val txs = obj.getAsJsonArray("txs") ?: return emptyList()
-
-            val matched = mutableListOf<String>()
-            for (txElem in txs) {
-                val tx = txElem.asJsonObject
-                val addrs = tx.getAsJsonArray("a") ?: continue
-                if (addrs.any { it.asString == address }) {
-                    matched.add(tx.get("t").asString)
-                }
-            }
-            matched
-        } catch (_: Exception) {
-            null
-        }
+        // The public node exposes Core scanblocks, not the upstream wallet's custom
+        // numeric scanblocks API. Its basic filter index is disabled. Do not claim
+        // a successful scan or advance the cursor; UTXOs and local history remain available.
+        return Pair(emptyList(), lastScannedHeight)
     }
 
     /** Fetch QBX/USDT price from KlingEx public API. Returns null on failure. */

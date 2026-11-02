@@ -51,7 +51,7 @@
     <!-- History Screen -->
     <string name="history_title">Transaction History</string>
     <string name="history_count">%d transactions</string>
-    <string name="history_empty">No transactions yet.\nTransactions will appear here automatically.</string>
+    <string name="history_empty">No locally known transactions.\nFull restored history is unavailable on this RPC; current balance and new wallet sends remain available.</string>
     <string name="history_to">To:</string>
     <string name="history_received">Received:</string>
     <string name="history_from_short">Received</string>

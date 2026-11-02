@@ -21,8 +21,8 @@ android {
         applicationId = "org.qbitx.wallet.preview"
         minSdk = 26
         targetSdk = 36
-        versionCode = 27
-        versionName = "1.6.1-audit-preview"
+        versionCode = 28
+        versionName = "1.6.2-ecosystem-preview"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         ndk {

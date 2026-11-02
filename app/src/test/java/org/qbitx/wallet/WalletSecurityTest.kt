@@ -72,6 +72,16 @@ class WalletSecurityTest {
             }
         }
     }
+    @Test fun nativePaymentsRespectPublicRpcBodyLimit() {
+        val coins=(0 until 24).map { SendPlanner.Coin(1_000_000L,true,it) }
+        val batches=SendPlanner.plan(coins,20_000_000L,5)
+        assertTrue(batches.size > 1)
+        batches.forEach { batch ->
+            assertTrue(batch.coinRefs.size <= 8)
+            // Hex doubles the raw payload; reserve 1 KiB for the JSON envelope.
+            assertTrue(TransactionBuilder.estimateTxBytes(0,batch.coinRefs.size,2)*2+1024 < 102400)
+        }
+    }
     @Test fun plannerRejectsZeroAmount() { rejects { SendPlanner.plan(emptyList(),0,1) } }
     @Test fun plannerRejectsInsufficientFunds() { rejects { SendPlanner.plan(emptyList(),1,1) } }
     private fun rejects(action: () -> Unit) { try { action() } catch (e: Exception) { return }; fail("Expected rejection") }

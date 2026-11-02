@@ -18,11 +18,15 @@ import org.qbitx.wallet.ui.theme.*
 fun QbxBrand() {
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         Image(painterResource(R.drawable.qbx_symbol), null, Modifier.size(36.dp))
-        Row {
-            Text("Q-Bit", fontSize = 22.sp, fontWeight = FontWeight.SemiBold, color = QBXOnSurface, letterSpacing = (-0.7).sp)
-            Text("X", fontSize = 22.sp, fontWeight = FontWeight.SemiBold, color = QBXMint, letterSpacing = (-0.7).sp)
+        Column(verticalArrangement = Arrangement.spacedBy(1.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("Q-Bit", fontSize = 22.sp, fontWeight = FontWeight.SemiBold, color = QBXOnSurface, letterSpacing = (-0.7).sp)
+                Text("X", fontSize = 22.sp, fontWeight = FontWeight.SemiBold, color = QBXMint, letterSpacing = (-0.7).sp)
+                Text("WALLET", fontSize = 9.sp, letterSpacing = 1.8.sp, fontFamily = FontFamily.Monospace,
+                    color = QBXOnSurfaceDim, modifier = Modifier.padding(start = 14.dp))
+            }
+            Text("ecosystem", fontSize = 8.sp, letterSpacing = 1.2.sp, fontFamily = FontFamily.Monospace,
+                color = QBXOnSurfaceDim)
         }
-        Text("WALLET", fontSize = 9.sp, letterSpacing = 1.8.sp, fontFamily = FontFamily.Monospace,
-            color = QBXOnSurfaceDim, modifier = Modifier.padding(start = 6.dp))
     }
 }
