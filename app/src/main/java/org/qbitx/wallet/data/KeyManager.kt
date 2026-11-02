@@ -26,6 +26,7 @@ data class TxRecord(
 
 class KeyManager(context: Context, preferencesOverride: android.content.SharedPreferences? = null) {
 
+    private val appContext = context.applicationContext
     private val dilithium = DilithiumNative()
     private val gson = Gson()
 
@@ -225,6 +226,52 @@ class KeyManager(context: Context, preferencesOverride: android.content.SharedPr
         val hex = AddressUtils.toHex(priv)
         priv.fill(0)
         return hex
+    }
+
+    fun exportWalletDat(): ByteArray {
+        val backup=requireNotNull(exportBackup()) { "No active wallet" }.split(":")
+        val secret=Base64.decode(backup[0],Base64.NO_WRAP)
+        return try { CoreWalletDat.write(appContext,secret,Base64.decode(backup[1],Base64.NO_WRAP),exportSeed()) }
+        finally { secret.fill(0) }
+    }
+
+    fun importWalletDat(bytes: ByteArray, name: String=""): WalletInfo {
+        val recovered=CoreWalletDat.read(appContext,bytes)
+        try {
+            // Validate every key before making a single atomic encrypted-preferences write.
+            recovered.forEach { recovery ->
+                val signature=requireNotNull(dilithium.sign("qbx-walletdat-check".toByteArray(),recovery.secret))
+                require(dilithium.verify(signature,"qbx-walletdat-check".toByteArray(),recovery.public)) { "Wallet key pair does not match" }
+                recovery.seed?.let { mnemonic ->
+                    val seed=SeedWallet.keySeed(SeedWallet.validate(mnemonic))
+                    val derived=try { requireNotNull(dilithium.generateKeypairFromSeed(seed)) } finally { seed.fill(0) }
+                    try { require(MessageDigest.isEqual(derived[0],recovery.public) && MessageDigest.isEqual(derived[1],recovery.secret)) { "Seed metadata does not match wallet keys" } }
+                    finally { derived[1].fill(0) }
+                }
+            }
+            val ids=walletIds().toMutableList()
+            val byPublic=ids.associateBy { prefs.getString("w${it}_pub",null) }.toMutableMap()
+            val edit=prefs.edit()
+            var nextId=prefs.getInt("next_id",0)
+            val importedIds=mutableListOf<Int>()
+            recovered.forEachIndexed { index,recovery ->
+                val pub=Base64.encodeToString(recovery.public,Base64.NO_WRAP)
+                val duplicate=byPublic[pub]
+                val id=duplicate ?: nextId.also { nextId=Math.addExact(nextId,1);ids.add(it);byPublic[pub]=it }
+                importedIds.add(id)
+                if(duplicate!=null) checkWalletIntegrity(id)
+                if(duplicate==null || recovery.seed!=null) {
+                    edit.putString("w${id}_pub",pub).putString("w${id}_priv",Base64.encodeToString(recovery.secret,Base64.NO_WRAP))
+                    if(duplicate==null) edit.putString("w${id}_name",if(recovered.size==1) name.ifBlank { "Imported Core wallet" } else "${name.ifBlank { "Core wallet" }} ${index+1}")
+                    recovery.seed?.let { edit.putString("w${id}_seed",it).putString("w${id}_derivation",SeedWallet.VERSION).putBoolean("w${id}_seed_confirmed",true) }
+                }
+            }
+            val active=importedIds.first()
+            edit.putString("wallet_ids",ids.joinToString(",")).putInt("next_id",nextId).putInt("active_id",active)
+            check(edit.commit()) { "Wallet import storage failed" }
+            validated.addAll(importedIds)
+            return listWallets().first { it.id==active }
+        } finally { recovered.forEach { it.clear() } }
     }
 
     fun exportBackup(): String? {

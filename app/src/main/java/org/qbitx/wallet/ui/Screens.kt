@@ -278,98 +278,7 @@ fun WalletScreen(
 
             Spacer(Modifier.height(12.dp))
 
-            // Import wallet
-            var showImport by remember { mutableStateOf(false) }
-            var importKey by remember { mutableStateOf("") }
-            val context = LocalContext.current
-
-            val filePickerLauncher = rememberLauncherForActivityResult(
-                ActivityResultContracts.OpenDocument()
-            ) { uri: Uri? ->
-                uri?.let {
-                    try {
-                        val text = context.contentResolver.openInputStream(it)?.bufferedReader()?.readText() ?: ""
-                        if (text.contains(":")) {
-                            onImportWallet(text)
-                        } else {
-                            importKey = text
-                        }
-                    } catch (_: Exception) {}
-                }
-            }
-
-            OutlinedButton(
-                onClick = { showImport = !showImport },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(54.dp),
-                shape = RoundedCornerShape(8.dp),
-                colors = ButtonDefaults.outlinedButtonColors(contentColor = QBXOnSurface),
-                border = androidx.compose.foundation.BorderStroke(1.dp, QBXDivider)
-            ) {
-                Icon(Icons.Default.FileDownload, null, modifier = Modifier.size(20.dp))
-                Spacer(Modifier.width(10.dp))
-                Text(stringResource(R.string.btn_import_wallet), fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
-            }
-
-            if (showImport) {
-                Spacer(Modifier.height(12.dp))
-
-                // File import button
-                Button(
-                    onClick = { filePickerLauncher.launch(arrayOf("*/*")) },
-                    modifier = Modifier.fillMaxWidth().height(48.dp),
-                    shape = RoundedCornerShape(8.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = QBXMint, contentColor = QBXInk)
-                ) {
-                    Icon(Icons.Default.FolderOpen, null, modifier = Modifier.size(18.dp))
-                    Spacer(Modifier.width(10.dp))
-                    Text(stringResource(R.string.import_from_file), fontWeight = FontWeight.SemiBold)
-                }
-
-                Spacer(Modifier.height(12.dp))
-                Text(stringResource(R.string.import_or_paste), fontSize = 13.sp, color = QBXOnSurfaceDim, modifier = Modifier.align(Alignment.CenterHorizontally))
-                Spacer(Modifier.height(12.dp))
-
-                OutlinedTextField(
-                    value = importKey,
-                    onValueChange = { importKey = it },
-                    keyboardOptions = KeyboardOptions(autoCorrect = false, keyboardType = KeyboardType.Password),
-                    placeholder = { Text("24 English seed words or legacy key backup", color = QBXOnSurfaceDim.copy(alpha = 0.5f)) },
-                    modifier = Modifier.fillMaxWidth(),
-                    minLines = 3,
-                    maxLines = 5,
-                    shape = RoundedCornerShape(8.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = QBXMint,
-                        unfocusedBorderColor = QBXDivider,
-                        focusedContainerColor = QBXSurface,
-                        unfocusedContainerColor = QBXSurface,
-                        cursorColor = QBXMint,
-                        focusedTextColor = QBXOnSurface,
-                        unfocusedTextColor = QBXOnSurface
-                    )
-                )
-                Spacer(Modifier.height(8.dp))
-                Button(
-                    onClick = { onImportWallet(importKey) },
-                    modifier = Modifier.fillMaxWidth().height(48.dp),
-                    shape = RoundedCornerShape(8.dp),
-                    enabled = (importKey.trim().startsWith("{") || importKey.contains(":") || importKey.trim().split(Regex("\\s+")).size == 24) && !state.isLoading,
-                    colors = ButtonDefaults.buttonColors(containerColor = QBXMint, contentColor = QBXInk)
-                ) {
-                    if (state.isLoading) {
-                        CircularProgressIndicator(modifier = Modifier.size(22.dp), color = QBXOnSurface, strokeWidth = 2.dp)
-                    } else {
-                        Text(stringResource(R.string.btn_import), fontWeight = FontWeight.SemiBold)
-                    }
-                }
-
-                state.error?.let { error ->
-                    Spacer(Modifier.height(8.dp))
-                    Text(error, color = QBXRed, fontSize = 13.sp)
-                }
-            }
+            WalletImportPanel(state,onImportWallet)
 
             Spacer(Modifier.height(24.dp))
 
@@ -1488,6 +1397,120 @@ fun HistoryScreen(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
+private fun ColumnScope.WalletImportPanel(state: WalletUiState,onImportWallet: (String)->Unit) {
+// Import wallet
+var showImport by remember { mutableStateOf(false) }
+var importKey by remember { mutableStateOf("") }
+var importFileError by remember { mutableStateOf<String?>(null) }
+val context = LocalContext.current
+
+val filePickerLauncher = rememberLauncherForActivityResult(
+    ActivityResultContracts.OpenDocument()
+) { uri: Uri? ->
+    uri?.let {
+        try {
+            val bytes = requireNotNull(context.contentResolver.openInputStream(it)).use { stream ->
+                val out=java.io.ByteArrayOutputStream()
+                val buffer=ByteArray(8192)
+                while(true) {
+                    val count=stream.read(buffer)
+                    if(count<0) break
+                    require(out.size()+count<=org.qbitx.wallet.data.CoreWalletDat.MAX_BYTES) { "File exceeds 32 MiB" }
+                    out.write(buffer,0,count)
+                }
+                out.toByteArray()
+            }
+            try {
+                importFileError=null
+                if(bytes.take(16).toByteArray().contentEquals("SQLite format 3\u0000".toByteArray())) {
+                    onImportWallet("qbx-core-dat:"+android.util.Base64.encodeToString(bytes,android.util.Base64.NO_WRAP))
+                } else {
+                    require(bytes.size<=20000 && bytes.none { b -> b==0.toByte() }) { "Supported: unencrypted Core SQLite wallet.dat. Berkeley DB is not supported." }
+                    onImportWallet(bytes.toString(Charsets.UTF_8))
+                }
+            } finally { bytes.fill(0) }
+        } catch (e: Exception) { importFileError="Import failed: ${e.message}" }
+    }
+}
+
+OutlinedButton(
+    onClick = { showImport = !showImport },
+    modifier = Modifier
+        .fillMaxWidth()
+        .height(54.dp),
+    shape = RoundedCornerShape(8.dp),
+    colors = ButtonDefaults.outlinedButtonColors(contentColor = QBXOnSurface),
+    border = androidx.compose.foundation.BorderStroke(1.dp, QBXDivider)
+) {
+    Icon(Icons.Default.FileDownload, null, modifier = Modifier.size(20.dp))
+    Spacer(Modifier.width(10.dp))
+    Text(stringResource(R.string.btn_import_wallet), fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+}
+
+importFileError?.let { Text(it,color=QBXRed) }
+if (showImport) {
+    Spacer(Modifier.height(12.dp))
+
+    Text("Core SQLite wallet.dat: PQ keys only, each as a separate wallet. Balance is shown for the selected wallet. Encrypted and Berkeley DB files are not supported.",fontSize=12.sp,color=QBXOnSurfaceDim)
+    // File import button
+    Button(
+        onClick = { filePickerLauncher.launch(arrayOf("*/*")) },
+        modifier = Modifier.fillMaxWidth().height(48.dp),
+        shape = RoundedCornerShape(8.dp),
+        colors = ButtonDefaults.buttonColors(containerColor = QBXMint, contentColor = QBXInk)
+    ) {
+        Icon(Icons.Default.FolderOpen, null, modifier = Modifier.size(18.dp))
+        Spacer(Modifier.width(10.dp))
+        Text(stringResource(R.string.import_from_file), fontWeight = FontWeight.SemiBold)
+    }
+
+    Spacer(Modifier.height(12.dp))
+    Text(stringResource(R.string.import_or_paste), fontSize = 13.sp, color = QBXOnSurfaceDim, modifier = Modifier.align(Alignment.CenterHorizontally))
+    Spacer(Modifier.height(12.dp))
+
+    OutlinedTextField(
+        value = importKey,
+        onValueChange = { importKey = it },
+        keyboardOptions = KeyboardOptions(autoCorrect = false, keyboardType = KeyboardType.Password),
+        placeholder = { Text("24 English seed words or legacy key backup", color = QBXOnSurfaceDim.copy(alpha = 0.5f)) },
+        modifier = Modifier.fillMaxWidth(),
+        minLines = 3,
+        maxLines = 5,
+        shape = RoundedCornerShape(8.dp),
+        colors = OutlinedTextFieldDefaults.colors(
+            focusedBorderColor = QBXMint,
+            unfocusedBorderColor = QBXDivider,
+            focusedContainerColor = QBXSurface,
+            unfocusedContainerColor = QBXSurface,
+            cursorColor = QBXMint,
+            focusedTextColor = QBXOnSurface,
+            unfocusedTextColor = QBXOnSurface
+        )
+    )
+    Spacer(Modifier.height(8.dp))
+    Button(
+        onClick = { onImportWallet(importKey) },
+        modifier = Modifier.fillMaxWidth().height(48.dp),
+        shape = RoundedCornerShape(8.dp),
+        enabled = (importKey.trim().startsWith("{") || importKey.contains(":") || importKey.trim().split(Regex("\\s+")).size == 24) && !state.isLoading,
+        colors = ButtonDefaults.buttonColors(containerColor = QBXMint, contentColor = QBXInk)
+    ) {
+        if (state.isLoading) {
+            CircularProgressIndicator(modifier = Modifier.size(22.dp), color = QBXOnSurface, strokeWidth = 2.dp)
+        } else {
+            Text(stringResource(R.string.btn_import), fontWeight = FontWeight.SemiBold)
+        }
+    }
+
+    state.error?.let { error ->
+        Spacer(Modifier.height(8.dp))
+        Text(error, color = QBXRed, fontSize = 13.sp)
+    }
+}
+
+}
+
+@Composable
 fun SettingsScreen(
     state: WalletUiState,
     onConnect: (String) -> Unit,
@@ -1499,7 +1522,9 @@ fun SettingsScreen(
     onRenameWallet: (String) -> Unit,
     onDeleteActiveWallet: () -> Unit,
     onSwitchWallet: (Int) -> Unit,
-    onAddWallet: (String) -> Unit
+    onAddWallet: (String) -> Unit,
+    onExportWalletDat: () -> ByteArray = { error("No wallet.dat exporter") },
+    onImportWallet: (String)->Unit = {}
 ) {
     val context = LocalContext.current
     var rpcUrl by remember { mutableStateOf(state.rpcUrl) }
@@ -1624,6 +1649,9 @@ fun SettingsScreen(
                 HorizontalDivider(color = QBXDivider)
                 Spacer(Modifier.height(20.dp))
 
+                WalletImportPanel(state,onImportWallet)
+                Spacer(Modifier.height(16.dp))
+
                 // Backup / Export section
                 if (state.hasWallet) {
                     Text(stringResource(R.string.settings_backup_title), fontSize = 16.sp, fontWeight = FontWeight.SemiBold, color = QBXOnSurface)
@@ -1638,17 +1666,38 @@ fun SettingsScreen(
                     var fileSaved by remember { mutableStateOf(false) }
                     var showDeleteConfirm by remember { mutableStateOf(false) }
 
+                    var datWarning by remember { mutableStateOf(false) }
+                    var datStatus by remember { mutableStateOf<String?>(null) }
+                    val datLauncher=rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/octet-stream")) { uri ->
+                        if(uri!=null) {
+                            try {
+                                val bytes=onExportWalletDat()
+                                try { requireNotNull(context.contentResolver.openOutputStream(uri,"wt")).use { it.write(bytes) } }
+                                finally { bytes.fill(0) }
+                                datStatus="wallet.dat saved. Keep it offline and secret."
+                            } catch(e: Exception) { datStatus="wallet.dat export failed: ${e.message}" }
+                        }
+                    }
+                    OutlinedButton(onClick={datWarning=true},modifier=Modifier.fillMaxWidth()) { Text("Export Core wallet.dat") }
+                    Text("Unencrypted Core SQLite backup of the active PQ wallet. Import via Import wallet / file. Encrypted and Berkeley DB files are not supported.",fontSize=12.sp,color=QBXOnSurfaceDim)
+                    datStatus?.let { Text(it,color=QBXOnSurfaceDim) }
+                    if(datWarning) AlertDialog(onDismissRequest={datWarning=false},
+                        title={Text("Unencrypted wallet.dat")},
+                        text={Text("Anyone with this file can spend your QBX. Save it offline; never share it with support or upload it to a website. It contains only the active wallet key, not all wallets in this app.")},
+                        confirmButton={TextButton(onClick={datWarning=false;datLauncher.launch("wallet.dat")}) { Text("Save wallet.dat") }},
+                        dismissButton={TextButton(onClick={datWarning=false}) { Text("Cancel") }})
+
                     val saveFileLauncher = rememberLauncherForActivityResult(
                         ActivityResultContracts.CreateDocument("application/octet-stream")
                     ) { uri: Uri? ->
                         uri?.let {
                             backupKey?.let { key ->
                                 try {
-                                    context.contentResolver.openOutputStream(it)?.use { out ->
+                                    requireNotNull(context.contentResolver.openOutputStream(it,"wt")).use { out ->
                                         out.write(org.qbitx.wallet.crypto.SeedWallet.backupEnvelope(key).toByteArray(Charsets.UTF_8))
                                     }
                                     fileSaved = true
-                                } catch (_: Exception) {}
+                                } catch (e: Exception) { datStatus="Backup export failed: ${e.message}" }
                             }
                         }
                     }

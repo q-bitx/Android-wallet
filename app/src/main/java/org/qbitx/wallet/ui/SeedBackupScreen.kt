@@ -21,6 +21,11 @@ import org.qbitx.wallet.ui.theme.*
 
 @Composable
 fun SeedBackupScreen(seed: String, onConfirmed: () -> Unit) {
+    var safetyQuiz by remember(seed) { mutableStateOf(false) }
+    if (safetyQuiz) {
+        RecoverySafetyScreen(onConfirmed)
+        return
+    }
     var checking by remember(seed) { mutableStateOf(false) }
     var answers by remember(seed) { mutableStateOf("") }
     val words = seed.split(' ')
@@ -59,7 +64,7 @@ fun SeedBackupScreen(seed: String, onConfirmed: () -> Unit) {
                 OutlinedTextField(value=answers,onValueChange={answers=it},modifier=Modifier.fillMaxWidth(),
                     label={Text(stringResource(R.string.seed_confirm))},keyboardOptions=KeyboardOptions(autoCorrect=false,keyboardType=androidx.compose.ui.text.input.KeyboardType.Password),
                     shape=RoundedCornerShape(8.dp))
-                Button(onClick=onConfirmed,modifier=Modifier.fillMaxWidth().height(52.dp),shape=RoundedCornerShape(8.dp),
+                Button(onClick={safetyQuiz=true},modifier=Modifier.fillMaxWidth().height(52.dp),shape=RoundedCornerShape(8.dp),
                     enabled=answers.trim().split(Regex("\\s+"))==listOf(words[3],words[11],words[19])) {
                     Text(stringResource(R.string.seed_open))
                 }

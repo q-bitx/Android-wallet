@@ -4,6 +4,8 @@ import com.google.gson.Gson
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -31,6 +33,13 @@ import javax.net.ssl.X509TrustManager
 class NodeRpcClient(
     private var rpcUrl: String = "https://rpc.qbitx.org/"
 ) {
+    private val requestPacing = Mutex()
+    private var nextRequestNanos = 0L
+    private suspend fun paceRequest() = requestPacing.withLock {
+        val waitMillis = ((nextRequestNanos - System.nanoTime()) / 1_000_000L).coerceAtLeast(0)
+        if (waitMillis > 0) delay(waitMillis + 1)
+        nextRequestNanos = System.nanoTime() + 400_000_000L
+    }
     companion object {
         fun normalizeRpcUrl(rawUrl: String): String {
             val trimmed = rawUrl.trim()
@@ -116,6 +125,7 @@ class NodeRpcClient(
             .post(body.toRequestBody(JSON))
 
         val request = requestBuilder.build()
+        paceRequest()
         val (httpCode, responseBody) = client.newCall(request).execute().use { response ->
             val source = response.body?.source() ?: throw RpcException("Empty RPC response")
             if (source.request(8_000_001L)) throw RpcException("RPC response exceeds 8 MB limit")
@@ -163,53 +173,7 @@ class NodeRpcClient(
         val result = call("scantxoutset", "start", scanObjects)
         val obj = result.getAsJsonObject("result")
             ?: throw RpcException("Invalid UTXO scan response")
-        if (obj.get("success")?.asBoolean != true) throw RpcException("UTXO scan did not complete")
-
-        data class RawUtxo(val txid: String, val vout: Int, val amount: Double, val confs: Int, val scriptPubKey: String, val desc: String)
-
-        val rawUnspents = obj.getAsJsonArray("unspents")?.map { elem ->
-            val u = elem.asJsonObject
-            val confs = u.get("height")?.asInt?.let { obj.get("height")?.asInt?.minus(it)?.plus(1) } ?: 0
-            RawUtxo(
-                txid = u.get("txid").asString,
-                vout = u.get("vout").asInt,
-                amount = u.get("amount").asDouble,
-                confs = confs,
-                scriptPubKey = u.get("scriptPubKey")?.asString ?: "",
-                desc = u.get("desc")?.asString ?: ""
-            )
-        } ?: emptyList()
-
-        // Check coinbase status in parallel for UTXOs with < 100 confirmations
-        val coinbaseResults = coroutineScope {
-            rawUnspents.map { raw ->
-                if (raw.confs < 100) async { isCoinbaseTx(raw.txid) }
-                else async { false }
-            }.awaitAll()
-        }
-
-        val unspents = rawUnspents.mapIndexed { i, raw ->
-            Utxo(
-                txid = raw.txid,
-                vout = raw.vout,
-                address = if (!extraAddress.isNullOrEmpty() && raw.desc.contains(extraAddress)) extraAddress else address,
-                amount = raw.amount,
-                confirmations = raw.confs,
-                scriptPubKey = raw.scriptPubKey,
-                isCoinbase = coinbaseResults[i]
-            )
-        }
-
-        val immature = unspents.filter { it.isCoinbase && it.confirmations < 100 }
-        val immatureAmt = immature.sumOf { it.amount }
-        val immatureBlks = if (immature.isNotEmpty()) 100 - immature.maxOf { it.confirmations } else 0
-
-        return ScanResult(
-            totalAmount = obj.get("total_amount")?.asDouble ?: 0.0,
-            unspents = unspents,
-            immatureAmount = immatureAmt,
-            immatureBlocks = immatureBlks
-        )
+        return UtxoScanDecoder.decode(obj,address,extraAddress,::isCoinbaseTx)
     }
 
     /** Check if a transaction is a coinbase transaction. */

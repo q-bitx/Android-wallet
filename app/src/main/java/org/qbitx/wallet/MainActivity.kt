@@ -116,6 +116,8 @@ class MainActivity : FragmentActivity() {
                             state = state,
                             onConnect = { url -> viewModel.connectToNode(url) },
                             onExportBackup = { viewModel.exportBackup() },
+                            onExportWalletDat = { viewModel.exportWalletDat() },
+                            onImportWallet = { viewModel.importWallet(it) },
                             onDeleteWallet = {
                                 viewModel.deleteWallet()
                                 currentScreen = "home"

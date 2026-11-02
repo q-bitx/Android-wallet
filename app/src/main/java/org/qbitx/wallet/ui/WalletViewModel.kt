@@ -222,6 +222,7 @@ class WalletViewModel(application: Application) : AndroidViewModel(application) 
         refreshJob = viewModelScope.launch {
             isRefreshing = true
             try {
+                val walletId = keyManager.getActiveWalletId()
                 val address = _uiState.value.address
 
                 // Launch price fetch and blockchain info concurrently
@@ -230,10 +231,11 @@ class WalletViewModel(application: Application) : AndroidViewModel(application) 
 
                 if (address.isNotEmpty()) {
                     val scanResult = rpcClient.scanTxOutSet(address, _uiState.value.witnessAddress)
+                    if (keyManager.getActiveWalletId() != walletId) return@launch
                     val spendable = scanResult.totalAmount - scanResult.immatureAmount
                     val pendingDelta = pendingOutDelta(_uiState.value.txHistory)
                     _uiState.value = _uiState.value.copy(
-                        balance = spendable,
+                        balance = spendable, error = null, nodeConnected = true,
                         unconfirmedBalance = pendingDelta,
                         immatureBalance = scanResult.immatureAmount,
                         immatureBlocks = scanResult.immatureBlocks
@@ -248,7 +250,10 @@ class WalletViewModel(application: Application) : AndroidViewModel(application) 
                 if (price != null) {
                     _uiState.value = _uiState.value.copy(qbxPriceUsdt = price)
                 }
-            } catch (_: Exception) {} finally {
+            } catch (e: kotlinx.coroutines.CancellationException) { throw e
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(error = "Balance update failed; showing last known balance: ${e.message}", nodeConnected = false)
+            } finally {
                 isRefreshing = false
             }
         }
@@ -746,12 +751,18 @@ class WalletViewModel(application: Application) : AndroidViewModel(application) 
     fun getPublicKeyHex(): String = keyManager.exportPublicKeyHex() ?: ""
     fun exportBackup(): String = keyManager.exportSeed() ?: keyManager.exportBackup() ?: ""
 
+    fun exportWalletDat(): ByteArray = keyManager.exportWalletDat()
+
     fun importWallet(backup: String, name: String = "") {
         if (paymentInProgress || _uiState.value.isLoading) return
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, error = null)
             try {
-                keyManager.importRecovery(backup, name)
+                if (backup.startsWith("qbx-core-dat:")) {
+                    require(backup.length <= org.qbitx.wallet.data.CoreWalletDat.MAX_BYTES * 4 / 3 + 32) { "Wallet file too large" }
+                    val bytes=android.util.Base64.decode(backup.removePrefix("qbx-core-dat:"),android.util.Base64.NO_WRAP)
+                    try { keyManager.importWalletDat(bytes,name) } finally { bytes.fill(0) }
+                } else keyManager.importRecovery(backup, name)
                 checkWallet()
                 _uiState.value = _uiState.value.copy(isLoading = false)
                 refreshBalance()

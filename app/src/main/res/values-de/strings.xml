@@ -61,7 +61,7 @@
     <string name="history_fee">Gebühr</string>
     <string name="history_date">Datum</string>
     <string name="copied">Kopiert!</string>
-    <string name="import_from_file">Aus Datei importieren (.qbx)</string>
+    <string name="import_from_file">Aus Datei importieren (.qbx / wallet.dat)</string>
     <string name="import_or_paste">— oder Backup-Key manuell einfügen —</string>
     <string name="backup_save_file">Als Datei speichern (.qbx)</string>
     <string name="backup_file_saved">Datei gespeichert!</string>

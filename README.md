@@ -21,7 +21,16 @@ See SECURITY_REVIEW.md, DESIGN_SYSTEM.md and the separate delivered audit report
 - Single-transaction payments, maximum fee 0.1 QBX. Smaller payments may be needed for
   wallets with many inputs. An ambiguous broadcast timeout must not be retried blindly.
 
-## Download 1.6.2
+## Download 1.6.3
+
+https://github.com/q-bitx/Android-wallet/releases/tag/v1.6.3-recovery-preview
+
+Adds real unencrypted Core SQLite wallet.dat import/export, mandatory scam and
+recovery questions after new-seed backup proof, and stricter balance response
+validation. Import is also available in Settings. See WALLET_DAT.md for format
+limits and per-key balance behavior, and RECOVERY_AUDIT.md for verification.
+
+## Previous 1.6.2
 
 Private GitHub release: https://github.com/q-bitx/Android-wallet/releases/tag/v1.6.2-ecosystem-preview
 

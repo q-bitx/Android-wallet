@@ -45,7 +45,28 @@ class EcosystemDesignTest {
         compose.onNodeWithText("Open wallet").assertIsNotEnabled()
         compose.onNode(hasSetTextAction()).performTextReplacement("abandon abandon abandon")
         compose.onNodeWithText("Open wallet").assertIsEnabled().performClick()
+        org.junit.Assert.assertFalse(confirmed)
+        compose.onNodeWithText("Да, я должен предоставить seed-фразу").performScrollTo().performClick()
+        compose.onNodeWithText("Повторить").performScrollTo().performClick()
+        compose.onNodeWithText("Нет, это мошенники").performScrollTo().performClick()
+        compose.onNodeWithText("Далее").performScrollTo().performClick()
+        compose.onNodeWithText("Команда Q-BitX поможет восстановить доступ к кошельку и средствам").performScrollTo().performClick()
+        compose.onNodeWithText("Повторить").performScrollTo().performClick()
+        compose.onNodeWithText("Нет, это мошенники").performScrollTo().performClick()
+        compose.onNodeWithText("Далее").performScrollTo().performClick()
+        compose.onNodeWithText("Команда не сможет мне помочь").performScrollTo().performClick()
+        org.junit.Assert.assertFalse(confirmed)
+        compose.onNodeWithText("Далее").performScrollTo().performClick()
         org.junit.Assert.assertTrue(confirmed)
+    }
+    @Test fun importAvailableWithoutDeletingExistingWallet() {
+        compose.setContent { QBitXWalletTheme {
+            SettingsScreen(state=WalletUiState(hasWallet=true,address=legacy,witnessAddress=native),
+                onConnect={},onExportBackup={""},onDeleteWallet={},onBack={},onSetPin={},onRemovePin={},
+                onRenameWallet={},onDeleteActiveWallet={},onSwitchWallet={},onAddWallet={},onImportWallet={})
+        } }
+        compose.onNodeWithText("Import Wallet").performScrollTo().performClick()
+        compose.onNodeWithText("Import from file (.qbx / wallet.dat)").performScrollTo().assertIsDisplayed()
     }
     @Test fun receiveShowsNativeAddressAndQrInEcosystemStyle() {
         compose.setContent { QBitXWalletTheme { ReceiveScreen(legacy,native,{}) } }
