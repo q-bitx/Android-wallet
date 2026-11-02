@@ -10,8 +10,8 @@ import org.qbitx.wallet.ui.LanguagePreferences
 @RunWith(AndroidJUnit4::class)
 class LanguageDeviceTest {
     private val context get()=InstrumentationRegistry.getInstrumentation().targetContext
-    @Test fun allFifteenLocalesLoadSecurityTextAndFormatParameters() {
-        assertEquals(15,LanguagePreferences.languages.size)
+    @Test fun allSeventeenLocalesLoadSecurityTextAndFormatParameters() {
+        assertEquals(17,LanguagePreferences.languages.size)
         val english=LanguagePreferences.localized(context,"en").getString(R.string.safety_explanation_1)
         LanguagePreferences.languages.forEach { (tag,_) ->
             val localized=LanguagePreferences.localized(context,tag)
@@ -22,6 +22,20 @@ class LanguageDeviceTest {
             assertTrue(localized.getString(R.string.dat_warning_title).contains("wallet.dat"))
             if(tag in listOf("ar","ur")) assertEquals(android.view.View.LAYOUT_DIRECTION_RTL,localized.resources.configuration.layoutDirection)
         }
+    }
+    @Test fun newLanguageChoicesPersistAndRetiredChoiceRequiresSelection() {
+        val prefs=context.getSharedPreferences("qbx-interface",0)
+        val previous=prefs.getString("language",null)
+        try {
+            assertFalse(LanguagePreferences.languages.any { it.first=="uk" })
+            prefs.edit().putString("language","uk").commit()
+            assertNull(LanguagePreferences.selected(context))
+            for(tag in listOf("ko","ja","th")) {
+                LanguagePreferences.select(context,tag)
+                assertEquals(tag,LanguagePreferences.selected(context.createConfigurationContext(context.resources.configuration)))
+                assertEquals(LanguagePreferences.localized(context,tag).getString(R.string.language_title),LanguagePreferences.wrap(context).getString(R.string.language_title))
+            }
+        } finally { if(previous==null) prefs.edit().clear().commit() else prefs.edit().putString("language",previous).commit() }
     }
     @Test fun selectedLanguagePersistsAcrossNewContexts() {
         val previous=LanguagePreferences.selected(context)

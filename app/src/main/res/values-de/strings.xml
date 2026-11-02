@@ -113,7 +113,7 @@
     <string name="settings_new_wallet">Neue Geldbörse</string>
     <string name="settings_rename_wallet">Wallet umbenennen</string>
     <string name="settings_about">Um</string>
-    <string name="settings_version">Q-BitX Wallet v1.6.4</string>
+    <string name="settings_version">Q-BitX Wallet v1.6.5</string>
     <string name="settings_subtitle">Post-Quantum Light Wallet · Dilithium3 / ML-DSA-65</string>
     <string name="seed_title">Deine Worte. Ihr Portemonnaie.</string>
     <string name="seed_instruction">Schreiben Sie diese 24 Wörter der Reihe nach auf Papier. Sie stellen Ihr QBX-Wallet wieder her. Halten Sie sie offline und geben Sie sie niemals weiter.</string>

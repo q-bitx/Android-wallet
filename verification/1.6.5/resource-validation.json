@@ -1,0 +1,24 @@
+{
+  "locales": [
+    "values",
+    "values-b+ar",
+    "values-b+es",
+    "values-b+fil",
+    "values-b+fr",
+    "values-b+hi",
+    "values-b+ja",
+    "values-b+ko",
+    "values-b+pt",
+    "values-b+th",
+    "values-b+tr",
+    "values-b+ur",
+    "values-b+vi",
+    "values-de",
+    "values-in",
+    "values-ru",
+    "values-zh-rCN"
+  ],
+  "count": 17,
+  "keys_per_locale": 183,
+  "format_parameters": "match"
+}

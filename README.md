@@ -21,7 +21,15 @@ See SECURITY_REVIEW.md, DESIGN_SYSTEM.md and the separate delivered audit report
 - Single-transaction payments, maximum fee 0.1 QBX. Smaller payments may be needed for
   wallets with many inputs. An ambiguous broadcast timeout must not be retried blindly.
 
-## Download 1.6.4
+## Download 1.6.5
+
+https://github.com/q-bitx/Android-wallet/releases/tag/v1.6.5-asian-languages-preview
+
+Korean replaces Ukrainian; Japanese and Thai are added. There are now 17 languages.
+All interface and security/recovery strings are included. Previous Ukrainian
+preferences prompt for a new choice. Language selection does not change wallet keys.
+
+## Previous 1.6.4
 
 https://github.com/q-bitx/Android-wallet/releases/tag/v1.6.4-multilingual-preview
 

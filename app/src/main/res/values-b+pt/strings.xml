@@ -113,7 +113,7 @@
     <string name="settings_new_wallet">Nova carteira</string>
     <string name="settings_rename_wallet">Renomear carteira</string>
     <string name="settings_about">Sobre</string>
-    <string name="settings_version">Q-BitX Wallet v1.6.4</string>
+    <string name="settings_version">Q-BitX Wallet v1.6.5</string>
     <string name="settings_subtitle">Carteira Pós-Quantum Light · Dilithium3 / ML-DSA-65</string>
     <string name="seed_title">Suas palavras. Sua carteira.</string>
     <string name="seed_instruction">Escreva essas 24 palavras no papel, em ordem. Eles restauram sua carteira QBX. Mantenha-os off-line e nunca os compartilhe.</string>

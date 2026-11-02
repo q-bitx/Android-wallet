@@ -28,7 +28,9 @@ object LanguagePreferences {
         "tr" to "Türkçe",
         "vi" to "Tiếng Việt",
         "id" to "Bahasa Indonesia",
-        "uk" to "Українська",
+        "ko" to "한국어",
+        "ja" to "日本語",
+        "th" to "ไทย",
         "ur" to "اردو",
         "fil" to "Filipino"
     )

@@ -113,7 +113,7 @@
     <string name="settings_new_wallet">Bagong account</string>
     <string name="settings_rename_wallet">Palitan ang pangalan ng wallet</string>
     <string name="settings_about">Tungkol sa app</string>
-    <string name="settings_version">Q-BitX Wallet v1.6.4</string>
+    <string name="settings_version">Q-BitX Wallet v1.6.5</string>
     <string name="settings_subtitle">Post-quantum na light wallet · Dilithium3 / ML-DSA-65</string>
     <string name="seed_title">Iyong mga salita. Iyong wallet.</string>
     <string name="seed_instruction">Isulat sa papel ang 24 na salitang ito sa tamang pagkakasunod. Maibabalik nila ang iyong QBX wallet. Itago nang offline at huwag ibahagi.</string>

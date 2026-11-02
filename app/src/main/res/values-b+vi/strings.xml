@@ -113,7 +113,7 @@
     <string name="settings_new_wallet">Ví mới</string>
     <string name="settings_rename_wallet">Đổi tên ví</string>
     <string name="settings_about">Về</string>
-    <string name="settings_version">Q-BitX Wallet v1.6.4</string>
+    <string name="settings_version">Q-BitX Wallet v1.6.5</string>
     <string name="settings_subtitle">Ví ánh sáng hậu lượng tử · Dilithium3 / ML-DSA-65</string>
     <string name="seed_title">Lời nói của bạn. Ví của bạn.</string>
     <string name="seed_instruction">Viết 24 từ này ra giấy theo thứ tự. Họ khôi phục ví QBX của bạn. Giữ chúng ngoại tuyến và không bao giờ chia sẻ chúng.</string>
