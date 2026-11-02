@@ -9,6 +9,11 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.platform.testTag
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
@@ -27,7 +32,17 @@ fun SeedBackupScreen(seed: String, onConfirmed: () -> Unit) {
         return
     }
     var checking by remember(seed) { mutableStateOf(false) }
-    var answers by remember(seed) { mutableStateOf("") }
+    var answers by remember(seed) { mutableStateOf(listOf("", "", "")) }
+    val focusManager=androidx.compose.ui.platform.LocalFocusManager.current
+    val keyboard=androidx.compose.ui.platform.LocalSoftwareKeyboardController.current
+    val positions = listOf(3,11,19)
+    val focus = remember { List(3) { androidx.compose.ui.focus.FocusRequester() } }
+    val expected = positions.map { seed.split(' ')[it] }
+    androidx.compose.runtime.LaunchedEffect(answers) {
+        val completed=answers.zip(expected).takeWhile { it.first==it.second }.size
+        if (completed in 1..2) focus[completed].requestFocus()
+        else if(completed==3) { focusManager.clearFocus(); keyboard?.hide() }
+    }
     val words = seed.split(' ')
     val fontScale=LocalDensity.current.fontScale
     val width=LocalConfiguration.current.screenWidthDp
@@ -37,7 +52,7 @@ fun SeedBackupScreen(seed: String, onConfirmed: () -> Unit) {
             verticalArrangement = Arrangement.spacedBy(16.dp)) {
             QbxBrand()
             HorizontalDivider(color=QBXDivider)
-            Text("SEED / 24 WORDS", fontFamily=FontFamily.Monospace, fontSize=10.sp, letterSpacing=2.sp, color=QBXMint)
+            Text(stringResource(R.string.seed_heading), fontFamily=FontFamily.Monospace, fontSize=10.sp, letterSpacing=2.sp, color=QBXMint)
             Text(stringResource(R.string.seed_title), style=MaterialTheme.typography.headlineMedium)
             Text(stringResource(R.string.seed_instruction), color=QBXOnSurfaceDim, style=MaterialTheme.typography.bodyMedium)
             if (!checking) {
@@ -61,14 +76,26 @@ fun SeedBackupScreen(seed: String, onConfirmed: () -> Unit) {
                 }
             } else {
                 Text(stringResource(R.string.seed_check_instruction),color=QBXOnSurface)
-                OutlinedTextField(value=answers,onValueChange={answers=it},modifier=Modifier.fillMaxWidth(),
-                    label={Text(stringResource(R.string.seed_confirm))},keyboardOptions=KeyboardOptions(autoCorrect=false,keyboardType=androidx.compose.ui.text.input.KeyboardType.Password),
-                    shape=RoundedCornerShape(8.dp))
+                positions.forEachIndexed { index, position ->
+                    val value=answers[index]
+                    val correct=value==expected[index]
+                    val incorrect=value.isNotEmpty() && !correct
+                    OutlinedTextField(value=value,onValueChange={ typed ->
+                        val normalized=typed.trim().lowercase(java.util.Locale.ROOT)
+                        answers=answers.mapIndexed { i, old -> when { i==index -> normalized; i>index -> ""; else -> old } }
+                    },modifier=Modifier.fillMaxWidth().focusRequester(focus[index]).testTag("seed_word_${position+1}"),
+                        label={Text(stringResource(R.string.seed_word_number,position+1))},
+                        enabled=(0 until index).all { answers[it]==expected[it] },isError=incorrect,singleLine=true,
+                        trailingIcon={ if(correct) Icon(Icons.Default.CheckCircle,stringResource(R.string.answer_correct),tint=QBXMint)
+                            else if(incorrect) Icon(Icons.Default.Cancel,stringResource(R.string.answer_incorrect),tint=QBXRed) },
+                        keyboardOptions=KeyboardOptions(autoCorrect=false,capitalization=androidx.compose.ui.text.input.KeyboardCapitalization.None,
+                            keyboardType=androidx.compose.ui.text.input.KeyboardType.Password),shape=RoundedCornerShape(8.dp))
+                }
                 Button(onClick={safetyQuiz=true},modifier=Modifier.fillMaxWidth().height(52.dp),shape=RoundedCornerShape(8.dp),
-                    enabled=answers.trim().split(Regex("\\s+"))==listOf(words[3],words[11],words[19])) {
+                    enabled=answers==expected) {
                     Text(stringResource(R.string.seed_open))
                 }
-                TextButton(onClick={checking=false;answers=""}) { Text(stringResource(R.string.seed_show_again)) }
+                TextButton(onClick={checking=false;answers=listOf("", "", "")}) { Text(stringResource(R.string.seed_show_again)) }
             }
             Text(stringResource(R.string.seed_format),fontFamily=FontFamily.Monospace,fontSize=10.sp,color=QBXOnSurfaceDim)
         }

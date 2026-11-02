@@ -15,6 +15,9 @@ import org.qbitx.wallet.ui.*
 import org.qbitx.wallet.ui.theme.QBitXWalletTheme
 
 class MainActivity : FragmentActivity() {
+    override fun attachBaseContext(base: android.content.Context) {
+        super.attachBaseContext(LanguagePreferences.wrap(base))
+    }
     private var authenticated by mutableStateOf(false)
     private var authenticationPending = false
     private val credentialResult = registerForActivityResult(
@@ -27,16 +30,17 @@ class MainActivity : FragmentActivity() {
 
     override fun onStart() {
         super.onStart()
+        if(LanguagePreferences.selected(this)==null) return
         if (!authenticated && !authenticationPending) {
             val keyguard = getSystemService(android.app.KeyguardManager::class.java)
             if (!keyguard.isDeviceSecure) {
                 android.app.AlertDialog.Builder(this)
-                    .setTitle("Protect your wallet")
-                    .setMessage("Set a screen lock in Android settings, then reopen Q-BitX.")
-                    .setCancelable(false).setPositiveButton("Close") { _, _ -> finish() }.show()
+                    .setTitle(R.string.protect_wallet_title)
+                    .setMessage(R.string.protect_wallet_message)
+                    .setCancelable(false).setPositiveButton(R.string.close_button) { _, _ -> finish() }.show()
             } else {
                 authenticationPending = true
-                credentialResult.launch(keyguard.createConfirmDeviceCredentialIntent("Q-BitX", "Unlock your wallet"))
+                credentialResult.launch(keyguard.createConfirmDeviceCredentialIntent("Q-BitX", getString(R.string.lock_biometric_subtitle)))
             }
         }
     }
@@ -52,6 +56,11 @@ class MainActivity : FragmentActivity() {
         enableEdgeToEdge()
         setContent {
             QBitXWalletTheme {
+                var choosingLanguage by remember { mutableStateOf(false) }
+                if (LanguagePreferences.selected(this)==null || choosingLanguage) {
+                    LanguageScreen { tag -> LanguagePreferences.select(this,tag); recreate() }
+                    return@QBitXWalletTheme
+                }
                 if (!authenticated) return@QBitXWalletTheme
                 val viewModel: WalletViewModel = viewModel()
                 val state by viewModel.uiState.collectAsState()
@@ -59,16 +68,16 @@ class MainActivity : FragmentActivity() {
                 if (state.pendingSendSummary != null) {
                     androidx.compose.material3.AlertDialog(
                         onDismissRequest = { viewModel.approveSend(false) },
-                        title = { androidx.compose.material3.Text("Confirm signed payment") },
+                        title = { androidx.compose.material3.Text(getString(R.string.payment_title)) },
                         text = { androidx.compose.material3.Text(state.pendingSendSummary!!) },
                         confirmButton = {
                             androidx.compose.material3.TextButton(onClick = { viewModel.approveSend(true) }) {
-                                androidx.compose.material3.Text("Send QBX")
+                                androidx.compose.material3.Text(getString(R.string.payment_send))
                             }
                         },
                         dismissButton = {
                             androidx.compose.material3.TextButton(onClick = { viewModel.approveSend(false) }) {
-                                androidx.compose.material3.Text("Cancel")
+                                androidx.compose.material3.Text(getString(R.string.btn_cancel))
                             }
                         }
                     )
@@ -106,6 +115,7 @@ class MainActivity : FragmentActivity() {
                         "receive" -> ReceiveScreen(
                             address = state.address,
                             witnessAddress = state.witnessAddress,
+                            addresses = walletReceiveAddresses(state.wallets),
                             onBack = { currentScreen = "home" }
                         )
                         "history" -> HistoryScreen(
@@ -117,6 +127,7 @@ class MainActivity : FragmentActivity() {
                             onConnect = { url -> viewModel.connectToNode(url) },
                             onExportBackup = { viewModel.exportBackup() },
                             onExportWalletDat = { viewModel.exportWalletDat() },
+                            onChooseLanguage = { choosingLanguage=true },
                             onImportWallet = { viewModel.importWallet(it) },
                             onDeleteWallet = {
                                 viewModel.deleteWallet()

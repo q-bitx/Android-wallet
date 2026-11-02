@@ -21,7 +21,25 @@ See SECURITY_REVIEW.md, DESIGN_SYSTEM.md and the separate delivered audit report
 - Single-transaction payments, maximum fee 0.1 QBX. Smaller payments may be needed for
   wallets with many inputs. An ambiguous broadcast timeout must not be retried blindly.
 
-## Download 1.6.3
+## Download 1.6.4
+
+https://github.com/q-bitx/Android-wallet/releases/tag/v1.6.4-multilingual-preview
+
+- 15 interface languages, first-launch selection and saved preference; change in Settings.
+- Adaptive launcher icon with safe padding for Android masks.
+- All save-file actions export a real Core SQLite wallet.dat containing all app accounts.
+- A fresh seed creates two distinct native witness accounts. Additional accounts reuse
+  that seed; older independent seeds and imported legacy keys remain valid.
+- Numbered receive addresses; imported native/legacy aliases remain selectable.
+- Separate word-check fields with immediate error feedback, automatic lowercasing
+  and focus progression only after a correct answer.
+
+Read SEED_FORMAT.md before relying on seed-only recovery of additional accounts.
+Full wallet.dat preserves all stored keys and derivation indices. Balances and sends
+use the selected account, not an aggregate across the account list. Translations are
+AI-generated and have not received independent native-speaker review.
+
+## Previous 1.6.3
 
 https://github.com/q-bitx/Android-wallet/releases/tag/v1.6.3-recovery-preview
 
@@ -32,7 +50,7 @@ limits and per-key balance behavior, and RECOVERY_AUDIT.md for verification.
 
 ## Previous 1.6.2
 
-Private GitHub release: https://github.com/q-bitx/Android-wallet/releases/tag/v1.6.2-ecosystem-preview
+GitHub release: https://github.com/q-bitx/Android-wallet/releases/tag/v1.6.2-ecosystem-preview
 
 Version 1.6.2 adds the small ecosystem header caption and limits payments to eight
 inputs to fit the verified public RPC 100 KiB request limit (legacy weight limits

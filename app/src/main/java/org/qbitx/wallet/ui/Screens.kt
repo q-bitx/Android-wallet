@@ -28,6 +28,7 @@ import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import org.qbitx.wallet.R
+import org.qbitx.wallet.crypto.AmountInput
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -575,14 +576,17 @@ fun WalletScreen(
 
             Spacer(Modifier.height(16.dp))
 
-            // Address cards: legacy "M..." and native PQ witness "dil1q..." of the same key
-            AddressCard(state.address)
-            if (state.witnessAddress.isNotEmpty()) {
-                Spacer(Modifier.height(8.dp))
-                AddressCard(state.witnessAddress)
+            val entries=walletReceiveAddresses(state.wallets).ifEmpty { listOf(state.witnessAddress.ifEmpty { state.address }) }
+            entries.withIndex().sortedBy { if(it.value==state.witnessAddress || it.value==state.address) 0 else 1 }.take(2).forEachIndexed { position, entry ->
+                val address=entry.value
+                if(position>0) Spacer(Modifier.height(8.dp))
+                val owner=state.wallets.firstOrNull { it.address==address || it.witnessAddress==address }?.name.orEmpty()
+                AddressCard(address,stringResource(R.string.numbered_address,entry.index+1,
+                    stringResource(if(address.startsWith("dil1")) R.string.address_witness else R.string.address_legacy)+if(owner.isBlank()) "" else " · $owner"))
             }
-
             Spacer(Modifier.height(16.dp))
+
+            if(entries.size>2) TextButton(onClick=onNavigateToReceive) { Text(stringResource(R.string.all_addresses,entries.size)) }
 
             // Connection status
             Row(
@@ -719,7 +723,7 @@ fun WalletScreen(
 // ==================== ADDRESS CARD ====================
 
 @Composable
-fun AddressCard(address: String) {
+fun AddressCard(address: String, label: String = "") {
     val clipboardManager = LocalClipboardManager.current
     var copied by remember { mutableStateOf(false) }
 
@@ -737,7 +741,7 @@ fun AddressCard(address: String) {
         Icon(Icons.Default.QrCode2, null, tint = QBXMint, modifier = Modifier.size(22.dp))
         Spacer(Modifier.width(12.dp))
         Column(modifier = Modifier.weight(1f)) {
-            Text(stringResource(R.string.pq_address), fontSize = 11.sp, color = QBXOnSurfaceDim)
+            Text(label.ifEmpty { stringResource(R.string.pq_address) }, fontSize = 11.sp, color = QBXOnSurfaceDim)
             Spacer(Modifier.height(2.dp))
             Text(
                 address,
@@ -873,7 +877,7 @@ fun SendScreen(
             Spacer(Modifier.height(8.dp))
             OutlinedTextField(
                 value = amount,
-                onValueChange = { amount = it },
+                onValueChange = { amount = AmountInput.normalize(it) },
                 placeholder = { Text("0.00000000", color = QBXOnSurfaceDim.copy(alpha = 0.5f)) },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
@@ -938,7 +942,7 @@ fun SendScreen(
                     .fillMaxWidth()
                     .height(54.dp),
                 shape = RoundedCornerShape(8.dp),
-                enabled = toAddress.isNotBlank() && amount.toDoubleOrNull() != null && amount.toDouble() > 0 && !state.isLoading,
+                enabled = toAddress.isNotBlank() && AmountInput.parse(amount) != null && !state.isLoading,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = QBXMint,
                     disabledContainerColor = QBXMint.copy(alpha = 0.3f)
@@ -1054,7 +1058,7 @@ fun SendScreen(
                     Button(
                         onClick = {
                             showConfirm = false
-                            amount.toDoubleOrNull()?.let { amt -> onSend(toAddress, amt, feePolicy) }
+                            AmountInput.parse(amount)?.let { amt -> onSend(toAddress, amt, feePolicy) }
                         },
                         colors = ButtonDefaults.buttonColors(containerColor = QBXMint, contentColor = QBXInk),
                         shape = RoundedCornerShape(8.dp)
@@ -1077,14 +1081,14 @@ fun SendScreen(
 fun ReceiveScreen(
     address: String,
     witnessAddress: String = "",
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    addresses: List<String> = emptyList()
 ) {
     val clipboardManager = LocalClipboardManager.current
     var copied by remember { mutableStateOf(false) }
-    // The wallet has two addresses for the same key: legacy "M..." and native PQ
-    // witness "dil1q...". Prefer native PQ; legacy remains available for compatibility.
-    var showWitness by remember(address,witnessAddress) { mutableStateOf(witnessAddress.isNotEmpty()) }
-    val shownAddress = if (showWitness && witnessAddress.isNotEmpty()) witnessAddress else address
+    val entries=addresses.ifEmpty { listOf(witnessAddress,address).filter { it.isNotBlank() }.distinct() }
+    var selected by remember(entries) { mutableStateOf(0) }
+    val shownAddress=entries.getOrElse(selected) { "" }
 
     Column(
         modifier = Modifier
@@ -1157,16 +1161,17 @@ fun ReceiveScreen(
             )
         }
 
-        if (witnessAddress.isNotEmpty()) {
-            TextButton(onClick = { showWitness = !showWitness; copied = false }) {
-                Text(
-                    stringResource(if (showWitness) R.string.receive_show_legacy else R.string.receive_show_native),
-                    fontSize = 13.sp,
-                    color = QBXMint
-                )
+        var addressMenu by remember { mutableStateOf(false) }
+        Box {
+            TextButton(onClick={addressMenu=true}) {
+                Text(stringResource(R.string.numbered_address,selected+1,stringResource(if(shownAddress.startsWith("dil1")) R.string.address_witness else R.string.address_legacy)))
             }
-        } else {
-            Spacer(Modifier.height(20.dp))
+            DropdownMenu(expanded=addressMenu,onDismissRequest={addressMenu=false}) {
+                entries.forEachIndexed { index, value ->
+                    DropdownMenuItem(text={Text(stringResource(R.string.numbered_address,index+1,stringResource(if(value.startsWith("dil1")) R.string.address_witness else R.string.address_legacy)))},
+                        onClick={selected=index;copied=false;addressMenu=false})
+                }
+            }
         }
 
         // Copy button
@@ -1207,6 +1212,10 @@ fun ReceiveScreen(
         )
     }
 }
+
+fun walletReceiveAddresses(wallets: List<org.qbitx.wallet.data.WalletInfo>): List<String> = wallets.flatMap { wallet ->
+    listOfNotNull(wallet.witnessAddress.takeIf { it.isNotBlank() },wallet.address.takeIf { wallet.showLegacy && it.isNotBlank() })
+}.distinct()
 
 fun generateQrCode(text: String): Bitmap? {
     return try {
@@ -1398,39 +1407,39 @@ fun HistoryScreen(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ColumnScope.WalletImportPanel(state: WalletUiState,onImportWallet: (String)->Unit) {
-// Import wallet
-var showImport by remember { mutableStateOf(false) }
-var importKey by remember { mutableStateOf("") }
-var importFileError by remember { mutableStateOf<String?>(null) }
-val context = LocalContext.current
+    // Import wallet
+    var showImport by remember { mutableStateOf(false) }
+    var importKey by remember { mutableStateOf("") }
+    var importFileError by remember { mutableStateOf<String?>(null) }
+    val context = LocalContext.current
 
-val filePickerLauncher = rememberLauncherForActivityResult(
-    ActivityResultContracts.OpenDocument()
-) { uri: Uri? ->
-    uri?.let {
-        try {
-            val bytes = requireNotNull(context.contentResolver.openInputStream(it)).use { stream ->
-                val out=java.io.ByteArrayOutputStream()
-                val buffer=ByteArray(8192)
-                while(true) {
-                    val count=stream.read(buffer)
-                    if(count<0) break
-                    require(out.size()+count<=org.qbitx.wallet.data.CoreWalletDat.MAX_BYTES) { "File exceeds 32 MiB" }
-                    out.write(buffer,0,count)
-                }
-                out.toByteArray()
-            }
+    val filePickerLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocument()
+    ) { uri: Uri? ->
+        uri?.let {
             try {
-                importFileError=null
-                if(bytes.take(16).toByteArray().contentEquals("SQLite format 3\u0000".toByteArray())) {
-                    onImportWallet("qbx-core-dat:"+android.util.Base64.encodeToString(bytes,android.util.Base64.NO_WRAP))
-                } else {
-                    require(bytes.size<=20000 && bytes.none { b -> b==0.toByte() }) { "Supported: unencrypted Core SQLite wallet.dat. Berkeley DB is not supported." }
-                    onImportWallet(bytes.toString(Charsets.UTF_8))
+                val bytes = requireNotNull(context.contentResolver.openInputStream(it)).use { stream ->
+                    val out=java.io.ByteArrayOutputStream()
+                    val buffer=ByteArray(8192)
+                    while(true) {
+                        val count=stream.read(buffer)
+                        if(count<0) break
+                        require(out.size()+count<=org.qbitx.wallet.data.CoreWalletDat.MAX_BYTES) { "File exceeds 32 MiB" }
+                        out.write(buffer,0,count)
+                    }
+                    out.toByteArray()
                 }
-            } finally { bytes.fill(0) }
-        } catch (e: Exception) { importFileError="Import failed: ${e.message}" }
-    }
+                try {
+                    importFileError=null
+                    if(bytes.take(16).toByteArray().contentEquals("SQLite format 3\u0000".toByteArray())) {
+                        onImportWallet("qbx-core-dat:"+android.util.Base64.encodeToString(bytes,android.util.Base64.NO_WRAP))
+                    } else {
+                        require(bytes.size<=20000 && bytes.none { b -> b==0.toByte() }) { "Supported: unencrypted Core SQLite wallet.dat. Berkeley DB is not supported." }
+                        onImportWallet(bytes.toString(Charsets.UTF_8))
+                    }
+                } finally { bytes.fill(0) }
+            } catch (e: Exception) { importFileError=context.getString(R.string.import_file_error,e.message) }
+        }
 }
 
 OutlinedButton(
@@ -1451,7 +1460,7 @@ importFileError?.let { Text(it,color=QBXRed) }
 if (showImport) {
     Spacer(Modifier.height(12.dp))
 
-    Text("Core SQLite wallet.dat: PQ keys only, each as a separate wallet. Balance is shown for the selected wallet. Encrypted and Berkeley DB files are not supported.",fontSize=12.sp,color=QBXOnSurfaceDim)
+    Text(stringResource(R.string.import_file_hint),fontSize=12.sp,color=QBXOnSurfaceDim)
     // File import button
     Button(
         onClick = { filePickerLauncher.launch(arrayOf("*/*")) },
@@ -1472,7 +1481,7 @@ if (showImport) {
         value = importKey,
         onValueChange = { importKey = it },
         keyboardOptions = KeyboardOptions(autoCorrect = false, keyboardType = KeyboardType.Password),
-        placeholder = { Text("24 English seed words or legacy key backup", color = QBXOnSurfaceDim.copy(alpha = 0.5f)) },
+        placeholder = { Text(stringResource(R.string.seed_import_hint), color = QBXOnSurfaceDim.copy(alpha = 0.5f)) },
         modifier = Modifier.fillMaxWidth(),
         minLines = 3,
         maxLines = 5,
@@ -1524,7 +1533,8 @@ fun SettingsScreen(
     onSwitchWallet: (Int) -> Unit,
     onAddWallet: (String) -> Unit,
     onExportWalletDat: () -> ByteArray = { error("No wallet.dat exporter") },
-    onImportWallet: (String)->Unit = {}
+    onImportWallet: (String)->Unit = {},
+    onChooseLanguage: ()->Unit = {}
 ) {
     val context = LocalContext.current
     var rpcUrl by remember { mutableStateOf(state.rpcUrl) }
@@ -1581,7 +1591,7 @@ fun SettingsScreen(
                     value = rpcUrl,
                     onValueChange = { rpcUrl = it },
                     label = { Text("RPC URL") },
-                    placeholder = { Text("https://qbitx.solopool.site/", color = QBXOnSurfaceDim.copy(alpha = 0.5f)) },
+                    placeholder = { Text("https://rpc.qbitx.org/", color = QBXOnSurfaceDim.copy(alpha = 0.5f)) },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
                     shape = RoundedCornerShape(14.dp),
@@ -1649,6 +1659,7 @@ fun SettingsScreen(
                 HorizontalDivider(color = QBXDivider)
                 Spacer(Modifier.height(20.dp))
 
+                OutlinedButton(onClick=onChooseLanguage,modifier=Modifier.fillMaxWidth()) { Text(stringResource(R.string.language_setting)) }
                 WalletImportPanel(state,onImportWallet)
                 Spacer(Modifier.height(16.dp))
 
@@ -1656,7 +1667,7 @@ fun SettingsScreen(
                 if (state.hasWallet) {
                     Text(stringResource(R.string.settings_backup_title), fontSize = 16.sp, fontWeight = FontWeight.SemiBold, color = QBXOnSurface)
                     Spacer(Modifier.height(4.dp))
-                    Text("Seed: 24 words. Recovery format: qbx-pqhd-v1. Keep offline; never share.", fontSize = 13.sp, color = QBXOnSurfaceDim)
+                    Text(stringResource(R.string.seed_backup_hint), fontSize = 13.sp, color = QBXOnSurfaceDim)
 
                     Spacer(Modifier.height(16.dp))
 
@@ -1674,33 +1685,18 @@ fun SettingsScreen(
                                 val bytes=onExportWalletDat()
                                 try { requireNotNull(context.contentResolver.openOutputStream(uri,"wt")).use { it.write(bytes) } }
                                 finally { bytes.fill(0) }
-                                datStatus="wallet.dat saved. Keep it offline and secret."
-                            } catch(e: Exception) { datStatus="wallet.dat export failed: ${e.message}" }
+                                datStatus=context.getString(R.string.dat_saved)
+                            } catch(e: Exception) { datStatus=context.getString(R.string.dat_export_error,e.message) }
                         }
                     }
-                    OutlinedButton(onClick={datWarning=true},modifier=Modifier.fillMaxWidth()) { Text("Export Core wallet.dat") }
-                    Text("Unencrypted Core SQLite backup of the active PQ wallet. Import via Import wallet / file. Encrypted and Berkeley DB files are not supported.",fontSize=12.sp,color=QBXOnSurfaceDim)
+                    OutlinedButton(onClick={datWarning=true},modifier=Modifier.fillMaxWidth()) { Text(stringResource(R.string.dat_export)) }
+                    Text(stringResource(R.string.dat_export_hint),fontSize=12.sp,color=QBXOnSurfaceDim)
                     datStatus?.let { Text(it,color=QBXOnSurfaceDim) }
                     if(datWarning) AlertDialog(onDismissRequest={datWarning=false},
-                        title={Text("Unencrypted wallet.dat")},
-                        text={Text("Anyone with this file can spend your QBX. Save it offline; never share it with support or upload it to a website. It contains only the active wallet key, not all wallets in this app.")},
-                        confirmButton={TextButton(onClick={datWarning=false;datLauncher.launch("wallet.dat")}) { Text("Save wallet.dat") }},
-                        dismissButton={TextButton(onClick={datWarning=false}) { Text("Cancel") }})
-
-                    val saveFileLauncher = rememberLauncherForActivityResult(
-                        ActivityResultContracts.CreateDocument("application/octet-stream")
-                    ) { uri: Uri? ->
-                        uri?.let {
-                            backupKey?.let { key ->
-                                try {
-                                    requireNotNull(context.contentResolver.openOutputStream(it,"wt")).use { out ->
-                                        out.write(org.qbitx.wallet.crypto.SeedWallet.backupEnvelope(key).toByteArray(Charsets.UTF_8))
-                                    }
-                                    fileSaved = true
-                                } catch (e: Exception) { datStatus="Backup export failed: ${e.message}" }
-                            }
-                        }
-                    }
+                        title={Text(stringResource(R.string.dat_warning_title))},
+                        text={Text(stringResource(R.string.dat_warning_text))},
+                        confirmButton={TextButton(onClick={datWarning=false;datLauncher.launch("wallet.dat")}) { Text(stringResource(R.string.save_wallet_dat)) }},
+                        dismissButton={TextButton(onClick={datWarning=false}) { Text(stringResource(R.string.btn_cancel)) }})
 
                     Button(
                         onClick = { backupKey = onExportBackup() },
@@ -1733,7 +1729,7 @@ fun SettingsScreen(
 
                         // Save as file button
                         Button(
-                            onClick = { saveFileLauncher.launch("qbitx-backup.qbx") },
+                            onClick = { datWarning=true },
                             modifier = Modifier.fillMaxWidth().height(48.dp),
                             shape = RoundedCornerShape(8.dp),
                             colors = ButtonDefaults.buttonColors(containerColor = QBXGreen, contentColor = QBXInk)
@@ -1745,7 +1741,7 @@ fun SettingsScreen(
                             )
                             Spacer(Modifier.width(10.dp))
                             Text(
-                                if (fileSaved) stringResource(R.string.backup_file_saved) else stringResource(R.string.backup_save_file),
+                                stringResource(R.string.save_wallet_dat),
                                 fontWeight = FontWeight.SemiBold
                             )
                         }
@@ -2061,7 +2057,7 @@ fun SettingsScreen(
                             text = {
                                 OutlinedTextField(
                                     value = addWalletName, onValueChange = { addWalletName = it },
-                                    placeholder = { Text("Name (optional)", color = QBXOnSurfaceDim.copy(alpha = 0.5f)) },
+                                    placeholder = { Text(stringResource(R.string.new_wallet_name_hint), color = QBXOnSurfaceDim.copy(alpha = 0.5f)) },
                                     singleLine = true, shape = RoundedCornerShape(8.dp),
                                     colors = OutlinedTextFieldDefaults.colors(
                                         focusedBorderColor = QBXMint, unfocusedBorderColor = QBXDivider,

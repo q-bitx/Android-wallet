@@ -1,6 +1,7 @@
 package org.qbitx.wallet.ui
 
 import android.app.Application
+import org.qbitx.wallet.R
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Job
@@ -57,11 +58,23 @@ data class WalletUiState(
 )
 
 class WalletViewModel(application: Application) : AndroidViewModel(application) {
+    private fun message(id: Int,vararg args: Any?) = LanguagePreferences.wrap(getApplication<Application>()).getString(id,*args)
 
     private val keyManager = KeyManager(application)
     val rpcClient = NodeRpcClient(rpcUrl = "https://rpc.qbitx.org/")
     private var isRefreshing = false
     private var refreshJob: Job? = null
+    private var refreshGeneration = 0L
+    private fun cancelBalanceRefresh() {
+        refreshGeneration++
+        refreshJob?.cancel()
+        refreshJob=null
+        isRefreshing=false
+    }
+    private fun resetAccountBalance() {
+        _uiState.value=_uiState.value.copy(balance=0.0,unconfirmedBalance=0.0,
+            immatureBalance=0.0,immatureBlocks=0,isScanningHistory=false,scanProgressText=null)
+    }
     private var paymentInProgress = false
     private var sendApproval: kotlinx.coroutines.CompletableDeferred<Boolean>? = null
     fun approveSend(approved: Boolean) { sendApproval?.complete(approved) }
@@ -83,7 +96,7 @@ class WalletViewModel(application: Application) : AndroidViewModel(application) 
             }
         }
         try { checkWallet() } catch (_: Exception) {
-            _uiState.value = _uiState.value.copy(error = "Wallet integrity check failed. Restore your backup before using this wallet.")
+            _uiState.value = _uiState.value.copy(error = message(R.string.wallet_integrity_error))
         }
         autoConnect()
     }
@@ -133,17 +146,20 @@ class WalletViewModel(application: Application) : AndroidViewModel(application) 
 
     fun createWallet(name: String = "") {
         if (paymentInProgress || _uiState.value.isLoading) return
+        cancelBalanceRefresh()
+        val previousId=keyManager.getActiveWalletId()
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, error = null)
             try {
-                keyManager.createWallet(name)
+                kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { keyManager.createWallet(name) }
                 checkWallet()
+                if(previousId!=keyManager.getActiveWalletId()) resetAccountBalance()
                 _uiState.value = _uiState.value.copy(isLoading = false)
                 refreshBalance()
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
-                    error = "Wallet-Erstellung fehlgeschlagen: ${e.message}"
+                    error = message(R.string.create_wallet_error,e.message)
                 )
             }
         }
@@ -152,9 +168,7 @@ class WalletViewModel(application: Application) : AndroidViewModel(application) 
     fun switchWallet(id: Int) {
         if (paymentInProgress || _uiState.value.isLoading) return
         // Cancel any ongoing refresh to prevent stale data overwriting new wallet
-        refreshJob?.cancel()
-        refreshJob = null
-        isRefreshing = false
+        cancelBalanceRefresh()
         keyManager.setActiveWallet(id)
         checkWallet()
         _uiState.value = _uiState.value.copy(
@@ -177,9 +191,7 @@ class WalletViewModel(application: Application) : AndroidViewModel(application) 
         if (paymentInProgress || _uiState.value.isLoading) return
         val id = keyManager.getActiveWalletId()
         if (id >= 0) {
-            refreshJob?.cancel()
-            refreshJob = null
-            isRefreshing = false
+            cancelBalanceRefresh()
             keyManager.deleteWallet(id)
             checkWallet()
             _uiState.value = _uiState.value.copy(
@@ -211,7 +223,7 @@ class WalletViewModel(application: Application) : AndroidViewModel(application) 
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
                     nodeConnected = false, isLoading = false,
-                    error = "Node-Verbindung fehlgeschlagen: ${e.message}"
+                    error = message(R.string.connect_error,e.message)
                 )
             }
         }
@@ -219,10 +231,11 @@ class WalletViewModel(application: Application) : AndroidViewModel(application) 
 
     fun refreshBalance() {
         if (isRefreshing) return
+        val generation=++refreshGeneration
         refreshJob = viewModelScope.launch {
             isRefreshing = true
+            val walletId = keyManager.getActiveWalletId()
             try {
-                val walletId = keyManager.getActiveWalletId()
                 val address = _uiState.value.address
 
                 // Launch price fetch and blockchain info concurrently
@@ -231,7 +244,7 @@ class WalletViewModel(application: Application) : AndroidViewModel(application) 
 
                 if (address.isNotEmpty()) {
                     val scanResult = rpcClient.scanTxOutSet(address, _uiState.value.witnessAddress)
-                    if (keyManager.getActiveWalletId() != walletId) return@launch
+                    if (keyManager.getActiveWalletId() != walletId || generation!=refreshGeneration) return@launch
                     val spendable = scanResult.totalAmount - scanResult.immatureAmount
                     val pendingDelta = pendingOutDelta(_uiState.value.txHistory)
                     _uiState.value = _uiState.value.copy(
@@ -252,9 +265,10 @@ class WalletViewModel(application: Application) : AndroidViewModel(application) 
                 }
             } catch (e: kotlinx.coroutines.CancellationException) { throw e
             } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(error = "Balance update failed; showing last known balance: ${e.message}", nodeConnected = false)
+                if(walletId==keyManager.getActiveWalletId() && generation==refreshGeneration)
+                    _uiState.value = _uiState.value.copy(error = message(R.string.balance_refresh_error,e.message), nodeConnected = false)
             } finally {
-                isRefreshing = false
+                if(generation==refreshGeneration) isRefreshing = false
             }
         }
     }
@@ -435,7 +449,7 @@ class WalletViewModel(application: Application) : AndroidViewModel(application) 
                 if (totalBlocks > 100) {
                     _uiState.value = _uiState.value.copy(
                         isScanningHistory = true,
-                        scanProgressText = "Scanning blockchain..."
+                        scanProgressText = message(R.string.scanning_history)
                     )
                 }
                 val (txids, highestScanned) = rpcClient.discoverAllTxIds(
@@ -445,7 +459,7 @@ class WalletViewModel(application: Application) : AndroidViewModel(application) 
                     onProgress = { scanned, total ->
                         val pct = if (total > 0) scanned * 100 / total else 0
                         _uiState.value = _uiState.value.copy(
-                            scanProgressText = "Scanning blocks... $pct%"
+                            scanProgressText = message(R.string.scanning_blocks,pct)
                         )
                     }
                 )
@@ -501,12 +515,12 @@ class WalletViewModel(application: Application) : AndroidViewModel(application) 
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, error = null, lastTxId = null)
             try {
-                require(amount.isFinite() && amount > 0) { "Invalid amount" }
+                require(amount.isFinite() && amount > 0) { message(R.string.invalid_amount) }
                 val endpointInfo = try {
                     rpcClient.getBlockchainInfo()
                 } catch (e: Exception) {
                     _uiState.value = _uiState.value.copy(nodeConnected = false)
-                    throw Exception("Keine gültige Node-Verbindung. RPC-URL prüfen und neu verbinden.")
+                    throw Exception(message(R.string.no_connection))
                 }
 
                 _uiState.value = _uiState.value.copy(
@@ -517,13 +531,13 @@ class WalletViewModel(application: Application) : AndroidViewModel(application) 
 
                 // Validate address via node
                 if (!rpcClient.validateAddress(toAddress)) {
-                    throw Exception("Ungültige Empfängeradresse")
+                    throw Exception(message(R.string.invalid_recipient))
                 }
 
                 val myAddress = _uiState.value.address
                 val witnessAddress = _uiState.value.witnessAddress
                 val publicKey = keyManager.getPublicKey()
-                    ?: throw Exception("Kein Wallet vorhanden")
+                    ?: throw Exception(message(R.string.no_wallet))
 
                 val scanResult = rpcClient.scanTxOutSet(myAddress, witnessAddress)
                 val pendingSpent = keyManager.getPendingSpentOutpoints()
@@ -594,19 +608,19 @@ class WalletViewModel(application: Application) : AndroidViewModel(application) 
                 // are far cheaper to spend later than legacy ones.
                 val changeAddress = if (witnessAddress.isNotEmpty()) witnessAddress else myAddress
 
-                require(plannedBatches.size == 1) { "This payment needs multiple transactions. Send a smaller amount." }
+                require(plannedBatches.size == 1) { message(R.string.multiple_transactions) }
                 val totalBatches = plannedBatches.size
                 _uiState.value = _uiState.value.copy(
                     sendProgressCurrent = 0,
                     sendProgressTotal = totalBatches,
-                    sendProgressPhase = "Signiere"
+                    sendProgressPhase = message(R.string.signing_progress)
                 )
 
                 val preparedBatches = plannedBatches.mapIndexed { idx, batch ->
                     _uiState.value = _uiState.value.copy(
                         sendProgressCurrent = idx + 1,
                         sendProgressTotal = totalBatches,
-                        sendProgressPhase = "Signiere"
+                        sendProgressPhase = message(R.string.signing_progress)
                     )
                     // Sending to our own change address: one combined output, because
                     // createrawtransaction rejects the same address twice.
@@ -653,13 +667,13 @@ class WalletViewModel(application: Application) : AndroidViewModel(application) 
                 sendApproval = approval
                 val exactFee = java.math.BigDecimal.valueOf(preparedBatches.sumOf { it.actualFeeSat }, 8).toPlainString()
                 _uiState.value = _uiState.value.copy(pendingSendSummary =
-                    "Recipient:\n$toAddress\n\nAmount: $amount QBX\nExact fee: $exactFee QBX")
+                    message(R.string.payment_summary,toAddress,amount.toString(),exactFee))
                 val approved = try { kotlinx.coroutines.withTimeout(120_000) { approval.await() } }
                     finally {
                         sendApproval = null
                         _uiState.value = _uiState.value.copy(pendingSendSummary = null)
                     }
-                require(approved) { "Payment cancelled" }
+                require(approved) { message(R.string.payment_cancelled) }
                 val pendingRecords = mutableListOf<TxRecord>()
                 var totalActualFeeSat = 0L
                 val sendStart = System.currentTimeMillis()
@@ -680,7 +694,7 @@ class WalletViewModel(application: Application) : AndroidViewModel(application) 
                     val spentOutpoints = plannedBatches[index].inputs.map { "${it.txid}:${it.vout}" }
                     keyManager.reserveBroadcast(spentOutpoints,batch.signedHex,activeWalletId)
                     val txid = try { rpcClient.sendRawTransaction(batch.signedHex) } catch (e: Exception) {
-                        throw Exception("Broadcast status uncertain. Inputs remain locked; check the explorer before retrying. ${e.message}")
+                        throw Exception(message(R.string.uncertain_broadcast,e.message))
                     }
                     sentTxids.add(txid)
                     totalActualFeeSat += batch.actualFeeSat
@@ -735,7 +749,7 @@ class WalletViewModel(application: Application) : AndroidViewModel(application) 
                 )
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
-                    isLoading = false, error = "Senden fehlgeschlagen: ${e.message}",
+                    isLoading = false, error = message(R.string.send_error,e.message),
                     sendProgressCurrent = 0, sendProgressTotal = 0, sendProgressPhase = ""
                 )
             } finally {
@@ -755,21 +769,26 @@ class WalletViewModel(application: Application) : AndroidViewModel(application) 
 
     fun importWallet(backup: String, name: String = "") {
         if (paymentInProgress || _uiState.value.isLoading) return
+        cancelBalanceRefresh()
+        val previousId=keyManager.getActiveWalletId()
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, error = null)
             try {
+                kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
                 if (backup.startsWith("qbx-core-dat:")) {
                     require(backup.length <= org.qbitx.wallet.data.CoreWalletDat.MAX_BYTES * 4 / 3 + 32) { "Wallet file too large" }
                     val bytes=android.util.Base64.decode(backup.removePrefix("qbx-core-dat:"),android.util.Base64.NO_WRAP)
                     try { keyManager.importWalletDat(bytes,name) } finally { bytes.fill(0) }
                 } else keyManager.importRecovery(backup, name)
+                }
                 checkWallet()
+                if(previousId!=keyManager.getActiveWalletId()) resetAccountBalance()
                 _uiState.value = _uiState.value.copy(isLoading = false)
                 refreshBalance()
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
-                    error = "Import fehlgeschlagen: ${e.message}"
+                    error = message(R.string.import_error,e.message)
                 )
             }
         }
@@ -777,6 +796,7 @@ class WalletViewModel(application: Application) : AndroidViewModel(application) 
 
     fun deleteWallet() {
         if (paymentInProgress) return
+        cancelBalanceRefresh()
         keyManager.deleteAllWallets()
         _uiState.value = WalletUiState(hasPin = keyManager.hasPin())
     }

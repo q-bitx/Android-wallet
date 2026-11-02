@@ -1,0 +1,66 @@
+{
+  "test_addresses": [
+    "dil1qamtq08tmwmqpk3xx79zp9zw7pplmfeuhy2j2rg",
+    "MVg1T8goZDNeaTsSywhoVb65tHNjHzpY7K",
+    "dil1q2duducwrmn2xp2j4lml8ycavh7mlxs60csa3d8",
+    "MFWX7TMUGz9bpo7yvPgtMxadkPianY33uH"
+  ],
+  "checks": [
+    {
+      "method": "getblockchaininfo",
+      "result": {
+        "chain": "main",
+        "blocks": 244226,
+        "headers": 244226,
+        "bestblockhash": "0000000000000871cdc4edba82e842b4031ea1274607398d957ee459a7875479",
+        "bits": "1a555425",
+        "target": "0000000000005554250000000000000000000000000000000000000000000000",
+        "difficulty": 196615.6996377569,
+        "time": 1793594502,
+        "mediantime": 1793593911,
+        "verificationprogress": 1,
+        "initialblockdownload": false,
+        "chainwork": "00000000000000000000000000000000000000000000005f47967186112d4331",
+        "size_on_disk": 1718556728,
+        "pruned": false,
+        "warnings": []
+      }
+    },
+    {
+      "method": "validateaddress",
+      "result": {
+        "isvalid": true,
+        "address": "dil1qamtq08tmwmqpk3xx79zp9zw7pplmfeuhy2j2rg",
+        "scriptPubKey": "5214eed6079d7b76c01b44c6f1441289de087fb4e797",
+        "isscript": false,
+        "iswitness": true,
+        "witness_version": 0,
+        "witness_program": "eed6079d7b76c01b44c6f1441289de087fb4e797"
+      }
+    },
+    {
+      "method": "validateaddress",
+      "result": {
+        "isvalid": true,
+        "address": "dil1q2duducwrmn2xp2j4lml8ycavh7mlxs60csa3d8",
+        "scriptPubKey": "52145378de61c3dcd460aa55fefe7263acbfb7f3434f",
+        "isscript": false,
+        "iswitness": true,
+        "witness_version": 0,
+        "witness_program": "5378de61c3dcd460aa55fefe7263acbfb7f3434f"
+      }
+    },
+    {
+      "method": "scantxoutset",
+      "result": {
+        "success": true,
+        "txouts": 184134,
+        "height": 244226,
+        "bestblock": "0000000000000871cdc4edba82e842b4031ea1274607398d957ee459a7875479",
+        "unspents": [],
+        "total_amount": 0.0
+      }
+    }
+  ],
+  "valid_transaction_broadcast": false
+}

@@ -11,7 +11,7 @@ import org.qbitx.wallet.crypto.DilithiumNative
 import java.security.MessageDigest
 import org.qbitx.wallet.crypto.SeedWallet
 
-data class WalletInfo(val id: Int, val name: String, val address: String)
+data class WalletInfo(val id: Int, val name: String, val address: String, val witnessAddress: String = "", val showLegacy: Boolean = true)
 
 data class TxRecord(
     val txid: String,
@@ -73,7 +73,7 @@ class KeyManager(context: Context, preferencesOverride: android.content.SharedPr
         val b64 = prefs.getString("w${id}_pub", null) ?: return@mapNotNull null
         val pub = Base64.decode(b64, Base64.NO_WRAP)
         val name = prefs.getString("w${id}_name", "Wallet $id") ?: "Wallet $id"
-        WalletInfo(id, name, AddressUtils.pubkeyToAddress(pub))
+        WalletInfo(id, name, AddressUtils.pubkeyToAddress(pub),AddressUtils.pubkeyToWitnessAddress(pub),!prefs.getBoolean("w${id}_native_only",false))
     }
 
     fun getActiveWalletId(): Int = prefs.getInt("active_id", -1)
@@ -86,7 +86,7 @@ class KeyManager(context: Context, preferencesOverride: android.content.SharedPr
 
     fun hasWallet(): Boolean = walletIds().isNotEmpty()
 
-    private val validated = mutableSetOf<Int>()
+    private val validated = java.util.Collections.synchronizedSet(mutableSetOf<Int>())
 
     private fun checkWalletIntegrity(id: Int) {
         if (id in validated) return
@@ -96,8 +96,9 @@ class KeyManager(context: Context, preferencesOverride: android.content.SharedPr
             require(pub.size == dilithium.getPublicKeyBytes() && priv.size == dilithium.getSecretKeyBytes()) { "Invalid stored key size" }
             val mnemonic = prefs.getString("w${id}_seed", null)
             if (mnemonic != null) {
-                require(prefs.getString("w${id}_derivation", null) == SeedWallet.VERSION) { "Unsupported recovery version" }
-                val seed = SeedWallet.keySeed(mnemonic)
+                val index=prefs.getInt("w${id}_seed_index",0)
+                require(prefs.getString("w${id}_derivation", null) == if(index==0) SeedWallet.VERSION else SeedWallet.INDEXED_VERSION) { "Unsupported recovery version" }
+                val seed = SeedWallet.keySeed(mnemonic,index)
                 val restored = try { requireNotNull(dilithium.generateKeypairFromSeed(seed)) } finally { seed.fill(0) }
                 try {
                     require(MessageDigest.isEqual(pub, restored[0]) && MessageDigest.isEqual(priv, restored[1])) { "Stored seed and keys disagree; restore from your paper backup" }
@@ -151,14 +152,29 @@ class KeyManager(context: Context, preferencesOverride: android.content.SharedPr
     }
 
     fun createWallet(name: String = ""): WalletInfo {
-        val mnemonic = SeedWallet.generate()
-        val seed = SeedWallet.keySeed(mnemonic)
-        val keys = try { requireNotNull(dilithium.generateKeypairFromSeed(seed)) } finally { seed.fill(0) }
-        return storeWallet(keys, mnemonic, name, false)
+        val seedOwner=getActiveWalletId().takeIf { prefs.contains("w${it}_seed") } ?: walletIds().firstOrNull { prefs.contains("w${it}_seed") }
+        seedOwner?.let { checkWalletIntegrity(it) }
+        val mnemonic=seedOwner?.let { prefs.getString("w${it}_seed",null) } ?: SeedWallet.generate()
+        val sameSeed=walletIds().filter { prefs.getString("w${it}_seed",null)==mnemonic }
+        val next=(sameSeed.maxOfOrNull { prefs.getInt("w${it}_seed_index",0) } ?: -1)+1
+        val indices=if(sameSeed.isEmpty()) listOf(0,1) else listOf(next)
+        require(walletIds().size+indices.size<=1000) { "Wallet capacity reached" }
+        val recovered=indices.map { index ->
+            val seed=SeedWallet.keySeed(mnemonic,index)
+            val pair=try { requireNotNull(dilithium.generateKeypairFromSeed(seed)) } finally { seed.fill(0) }
+            CoreWalletDat.Recovery(pair[1],pair[0],mnemonic,index)
+        }
+        return try { storeRecovered(recovered,name,confirmed=seedOwner?.let { prefs.getBoolean("w${it}_seed_confirmed",false) } ?: false,nativeOnly=true) }
+        finally { recovered.forEach { it.clear() } }
     }
 
     fun pendingSeed(): String? = if (prefs.getBoolean("w${getActiveWalletId()}_seed_confirmed", false)) null else exportSeed()
-    fun confirmSeed() { checkWalletIntegrity(getActiveWalletId()); check(prefs.edit().putBoolean("w${getActiveWalletId()}_seed_confirmed", true).commit()) }
+    fun confirmSeed() {
+        checkWalletIntegrity(getActiveWalletId())
+        val mnemonic=exportSeed(); val edit=prefs.edit()
+        walletIds().filter { prefs.getString("w${it}_seed",null)==mnemonic }.forEach { edit.putBoolean("w${it}_seed_confirmed",true) }
+        check(edit.commit())
+    }
     fun exportSeed(): String? {
         val id = getActiveWalletId(); if (id < 0) return null
         checkWalletIntegrity(id)
@@ -166,10 +182,13 @@ class KeyManager(context: Context, preferencesOverride: android.content.SharedPr
     }
 
     fun restoreSeed(text: String, name: String = ""): WalletInfo {
-        val mnemonic = SeedWallet.validate(text)
-        val seed = SeedWallet.keySeed(mnemonic)
-        val keys = try { requireNotNull(dilithium.generateKeypairFromSeed(seed)) } finally { seed.fill(0) }
-        return storeWallet(keys, mnemonic, name, true)
+        val mnemonic=SeedWallet.validate(text)
+        val recovered=(0..1).map { index ->
+            val seed=SeedWallet.keySeed(mnemonic,index)
+            val pair=try { requireNotNull(dilithium.generateKeypairFromSeed(seed)) } finally { seed.fill(0) }
+            CoreWalletDat.Recovery(pair[1],pair[0],mnemonic,index)
+        }
+        return try { storeRecovered(recovered,name,true,false) } finally { recovered.forEach { it.clear() } }
     }
 
     fun importRecovery(backup: String, name: String = ""): WalletInfo {
@@ -229,21 +248,26 @@ class KeyManager(context: Context, preferencesOverride: android.content.SharedPr
     }
 
     fun exportWalletDat(): ByteArray {
-        val backup=requireNotNull(exportBackup()) { "No active wallet" }.split(":")
-        val secret=Base64.decode(backup[0],Base64.NO_WRAP)
-        return try { CoreWalletDat.write(appContext,secret,Base64.decode(backup[1],Base64.NO_WRAP),exportSeed()) }
-        finally { secret.fill(0) }
+        val recovered=walletIds().map { id ->
+            checkWalletIntegrity(id)
+            CoreWalletDat.Recovery(Base64.decode(prefs.getString("w${id}_priv",null),Base64.NO_WRAP),
+                Base64.decode(prefs.getString("w${id}_pub",null),Base64.NO_WRAP),prefs.getString("w${id}_seed",null),prefs.getInt("w${id}_seed_index",0))
+        }
+        return try { CoreWalletDat.writeMany(appContext,recovered) } finally { recovered.forEach { it.clear() } }
     }
 
     fun importWalletDat(bytes: ByteArray, name: String=""): WalletInfo {
         val recovered=CoreWalletDat.read(appContext,bytes)
-        try {
+        return try { storeRecovered(recovered,name,true,false) } finally { recovered.forEach { it.clear() } }
+    }
+
+    private fun storeRecovered(recovered: List<CoreWalletDat.Recovery>,name: String,confirmed: Boolean,nativeOnly: Boolean): WalletInfo {
             // Validate every key before making a single atomic encrypted-preferences write.
             recovered.forEach { recovery ->
                 val signature=requireNotNull(dilithium.sign("qbx-walletdat-check".toByteArray(),recovery.secret))
                 require(dilithium.verify(signature,"qbx-walletdat-check".toByteArray(),recovery.public)) { "Wallet key pair does not match" }
                 recovery.seed?.let { mnemonic ->
-                    val seed=SeedWallet.keySeed(SeedWallet.validate(mnemonic))
+                    val seed=SeedWallet.keySeed(SeedWallet.validate(mnemonic),recovery.index)
                     val derived=try { requireNotNull(dilithium.generateKeypairFromSeed(seed)) } finally { seed.fill(0) }
                     try { require(MessageDigest.isEqual(derived[0],recovery.public) && MessageDigest.isEqual(derived[1],recovery.secret)) { "Seed metadata does not match wallet keys" } }
                     finally { derived[1].fill(0) }
@@ -259,19 +283,21 @@ class KeyManager(context: Context, preferencesOverride: android.content.SharedPr
                 val duplicate=byPublic[pub]
                 val id=duplicate ?: nextId.also { nextId=Math.addExact(nextId,1);ids.add(it);byPublic[pub]=it }
                 importedIds.add(id)
-                if(duplicate!=null) checkWalletIntegrity(id)
+                if(!nativeOnly) edit.putBoolean("w${id}_native_only",false)
+                if(duplicate!=null && recovery.seed==null) checkWalletIntegrity(id)
                 if(duplicate==null || recovery.seed!=null) {
                     edit.putString("w${id}_pub",pub).putString("w${id}_priv",Base64.encodeToString(recovery.secret,Base64.NO_WRAP))
-                    if(duplicate==null) edit.putString("w${id}_name",if(recovered.size==1) name.ifBlank { "Imported Core wallet" } else "${name.ifBlank { "Core wallet" }} ${index+1}")
-                    recovery.seed?.let { edit.putString("w${id}_seed",it).putString("w${id}_derivation",SeedWallet.VERSION).putBoolean("w${id}_seed_confirmed",true) }
+                    if(duplicate==null) edit.putBoolean("w${id}_native_only",nativeOnly).putString("w${id}_name",if(recovered.size==1) name.ifBlank { org.qbitx.wallet.ui.LanguagePreferences.wrap(appContext).getString(org.qbitx.wallet.R.string.account_name,ids.indexOf(id)+1) } else name.ifBlank { org.qbitx.wallet.ui.LanguagePreferences.wrap(appContext).getString(org.qbitx.wallet.R.string.account_name,ids.indexOf(id)+1) })
+                    recovery.seed?.let { edit.putString("w${id}_seed",it).putString("w${id}_derivation",if(recovery.index==0) SeedWallet.VERSION else SeedWallet.INDEXED_VERSION).putInt("w${id}_seed_index",recovery.index).putBoolean("w${id}_seed_confirmed",confirmed) }
                 }
             }
-            val active=importedIds.first()
+            require(ids.size<=1000) { "Wallet capacity reached" }
+            val preferred=recovered.indexOfFirst { it.seed!=null && it.index==0 }.coerceAtLeast(0)
+            val active=importedIds[preferred]
             edit.putString("wallet_ids",ids.joinToString(",")).putInt("next_id",nextId).putInt("active_id",active)
             check(edit.commit()) { "Wallet import storage failed" }
             validated.addAll(importedIds)
             return listWallets().first { it.id==active }
-        } finally { recovered.forEach { it.clear() } }
     }
 
     fun exportBackup(): String? {
@@ -306,7 +332,7 @@ class KeyManager(context: Context, preferencesOverride: android.content.SharedPr
             .remove("w${id}_name")
             .remove("w${id}_seed_confirmed")
             .remove("w${id}_seed")
-            .remove("w${id}_derivation")
+            .remove("w${id}_derivation").remove("w${id}_seed_index").remove("w${id}_native_only")
             .remove("w${id}_uncertain_raw")
             .remove("w${id}_uncertain_spent")
             .remove(pendingSpentKey(id))

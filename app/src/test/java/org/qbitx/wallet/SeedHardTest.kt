@@ -7,6 +7,17 @@ import org.qbitx.wallet.crypto.*
 
 class SeedHardTest {
     private fun resource(name: String) = javaClass.getResourceAsStream("/$name")!!.bufferedReader().use { it.readText() }
+    @Test fun indexedAccountsAreDistinctAndRootV1RemainsFrozen() {
+        val mnemonic=SeedWallet.fromEntropy(ByteArray(32))
+        val root=SeedWallet.keySeed(mnemonic)
+        assertArrayEquals(root,SeedWallet.keySeed(mnemonic.uppercase(java.util.Locale.ROOT),0))
+        val keys=(0..100).map { AddressUtils.toHex(SeedWallet.keySeed(mnemonic,it)) }
+        org.junit.Assert.assertEquals(101,keys.toSet().size)
+        val envelope=SeedWallet.backupEnvelope(mnemonic,7)
+        org.junit.Assert.assertEquals(7,SeedWallet.backupIndex(envelope))
+        org.junit.Assert.assertEquals(mnemonic,SeedWallet.readBackupEnvelope(envelope))
+        org.junit.Assert.assertTrue(envelope.contains(SeedWallet.INDEXED_VERSION))
+    }
     @Test fun thousandIndependentPythonReferenceSeedsMatchExactly() {
         val corpus=JsonParser.parseString(resource("public-seed-corpus.json")).asJsonArray
         assertEquals(1000,corpus.size())

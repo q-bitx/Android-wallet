@@ -74,7 +74,7 @@ class SeedDeviceHardTest {
             assertEquals(raw,restored.exportBackup())
             val message="storage restore cycle $it".toByteArray()
             assertTrue(restored.verify(restored.sign(message)!!,message))
-            restored.deleteWallet(newWallet.id)
+            restored.deleteAllWallets()
         }
     }
     @Test fun alteredSeedVersionOrKeyFailsClosedAndSeedCanRepairPair() {
@@ -100,7 +100,7 @@ class SeedDeviceHardTest {
         val prefs=auditPreferences();val manager=KeyManager(context,prefs)
         val original=manager.createWallet();val seed=manager.exportSeed()!!
         val again=manager.importRecovery(SeedWallet.backupEnvelope(seed))
-        assertEquals(original.id,again.id);assertEquals(1,manager.listWallets().size)
+        assertEquals(original.id,again.id);assertEquals(2,manager.listWallets().size)
     }
     @Test fun diskCommitFailureNeverAcknowledgesCreatedOrRestoredWallet() {
         val prefs=auditPreferences()

@@ -14,7 +14,7 @@ object CoreWalletDat {
     private val header = "SQLite format 3\u0000".toByteArray(Charsets.US_ASCII)
     // Mainnet network magic, verified against kernel/chainparams.cpp.
     const val networkMagic: Int = 0x51424954
-    data class Recovery(val secret: ByteArray, val public: ByteArray, val seed: String?) {
+    data class Recovery(val secret: ByteArray, val public: ByteArray, val seed: String?, val index: Int = 0) {
         fun clear() { secret.fill(0) }
     }
     private fun vector(bytes: ByteArray): ByteArray {
@@ -80,7 +80,8 @@ object CoreWalletDat {
                         val seedRecord=records[AddressUtils.toHex(key("qbxseed",id))] ?: if(secrets.size==1) records[AddressUtils.toHex(key("qbxseed"))] else null
                         val seed=seedRecord?.let { org.qbitx.wallet.crypto.SeedWallet.readBackupEnvelope(String(unpack(it),Charsets.UTF_8)) }
                         require(secrets.size==1 || !records.containsKey(AddressUtils.toHex(key("qbxseed")))) { "Ambiguous old seed metadata in multi-key wallet" }
-                        recovered.add(Recovery(secret.copyOf(),pub,seed))
+                        val index=seedRecord?.let { org.qbitx.wallet.crypto.SeedWallet.backupIndex(String(unpack(it),Charsets.UTF_8)) } ?: 0
+                        recovered.add(Recovery(secret.copyOf(),pub,seed,index))
                     } finally { secret.fill(0) }
                     }
                     require(records.keys.count { it.startsWith(AddressUtils.toHex(key("dilpk"))) } == recovered.size) { "Watch-only PQ keys cannot be recovered for spending" }
@@ -92,7 +93,12 @@ object CoreWalletDat {
     }
     @Synchronized
     fun write(context: Context, secret: ByteArray, public: ByteArray, seed: String?): ByteArray {
-        require(secret.size==4032 && public.size==1952)
+        return writeMany(context,listOf(Recovery(secret,public,seed)))
+    }
+    @Synchronized
+    fun writeMany(context: Context, wallets: List<Recovery>): ByteArray {
+        require(wallets.size in 1..1000)
+        require(wallets.all { it.secret.size==4032 && it.public.size==1952 })
         val file=temporary(context)
         try {
             SQLiteDatabase.openOrCreateDatabase(file,null).use { db ->
@@ -103,11 +109,14 @@ object CoreWalletDat {
                 db.beginTransaction()
                 try {
                     fun put(k: ByteArray,v: ByteArray) { try { db.execSQL("INSERT INTO main(key,value) VALUES(?,?)",arrayOf(k,v)) } finally { v.fill(0) } }
+                    wallets.forEach { wallet ->
+                    val public=wallet.public; val secret=wallet.secret; val seed=wallet.seed
                     val id=AddressUtils.hash160(public)
                     put(key("dilpk",id),vector(public))
                     put(key("dilsk",id),vector(secret)+hash(public+secret))
                     // Core ignores this optional mobile recovery metadata; PQ keys remain standard Core records.
-                    if(seed!=null) put(key("qbxseed",id),vector(org.qbitx.wallet.crypto.SeedWallet.backupEnvelope(seed).toByteArray(Charsets.UTF_8)))
+                    if(seed!=null) put(key("qbxseed",id),vector(org.qbitx.wallet.crypto.SeedWallet.backupEnvelope(seed,wallet.index).toByteArray(Charsets.UTF_8)))
+                    }
                     db.setTransactionSuccessful()
                 } finally { db.endTransaction() }
             }

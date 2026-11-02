@@ -4,6 +4,9 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
@@ -16,6 +19,7 @@ import org.qbitx.wallet.ui.theme.*
 
 @Composable
 fun QbxBrand() {
+    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         Image(painterResource(R.drawable.qbx_symbol), null, Modifier.size(36.dp))
         Column(verticalArrangement = Arrangement.spacedBy(1.dp)) {
@@ -29,4 +33,5 @@ fun QbxBrand() {
                 color = QBXOnSurfaceDim)
         }
     }
+}
 }

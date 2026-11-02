@@ -1,16 +1,12 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <resources>
     <string name="app_name">Q-BitX Wallet Preview</string>
-
-    <!-- Lock Screen -->
     <string name="lock_title">Q-BitX Wallet</string>
     <string name="lock_enter_pin">Enter PIN</string>
     <string name="lock_wrong_pin">Wrong PIN</string>
     <string name="lock_biometric_title">Q-BitX Wallet</string>
     <string name="lock_biometric_subtitle">Unlock your wallet</string>
     <string name="lock_biometric_negative">Enter PIN</string>
-
-    <!-- Wallet Screen - No wallet -->
     <string name="welcome_title">Welcome to Q-BitX</string>
     <string name="welcome_subtitle">Quantum-resistant\ncryptocurrency of the future</string>
     <string name="btn_create_wallet">Create Wallet</string>
@@ -23,15 +19,13 @@
     <string name="feature_encrypted_sub">Keys stored securely</string>
     <string name="feature_pow">SHA-256d Proof-of-Work</string>
     <string name="feature_pow_sub">Proven consensus mechanism</string>
-
-    <!-- Wallet Screen - Dashboard -->
     <string name="wallet_count">%d Wallet</string>
     <string name="wallet_count_plural">%d Wallets</string>
     <string name="new_wallet_title">New Wallet</string>
     <string name="new_wallet_name_hint">Name (optional)</string>
     <string name="btn_create">Create</string>
     <string name="btn_cancel">Cancel</string>
-    <string name="balance_label">Balance</string>
+    <string name="balance_label">Selected account balance</string>
     <string name="block_label">Block %d</string>
     <string name="unconfirmed_label">Unconfirmed: %s QBX</string>
     <string name="immature_label">Immature: %1$s QBX (%2$d blocks left)</string>
@@ -47,8 +41,6 @@
     <string name="recent_tx">Recent Transactions</string>
     <string name="view_all_tx">View all</string>
     <string name="tx_to">To: %s</string>
-
-    <!-- History Screen -->
     <string name="history_title">Transaction History</string>
     <string name="history_count">%d transactions</string>
     <string name="history_empty">No locally known transactions.\nFull restored history is unavailable on this RPC; current balance and new wallet sends remain available.</string>
@@ -63,15 +55,13 @@
     <string name="copied">Copied!</string>
     <string name="import_from_file">Import from file (.qbx / wallet.dat)</string>
     <string name="import_or_paste">— or paste backup key manually —</string>
-    <string name="backup_save_file">Save as file (.qbx)</string>
+    <string name="backup_save_file">Save wallet.dat</string>
     <string name="backup_file_saved">File saved!</string>
-
-    <!-- Send Screen -->
     <string name="send_title">Send QBX</string>
     <string name="send_back">Back</string>
     <string name="send_available">Available: %s QBX</string>
     <string name="send_recipient">Recipient</string>
-    <string name="send_address_hint">Enter M… address</string>
+    <string name="send_address_hint">Enter dil1q… or M… address</string>
     <string name="send_scan_qr">Scan QR</string>
     <string name="send_qr_prompt">Scan QR code</string>
     <string name="send_amount">Amount</string>
@@ -85,14 +75,10 @@
     <string name="confirm_fees">Fees: %s</string>
     <string name="btn_confirm">Confirm</string>
     <string name="tx_sent">Transaction sent!</string>
-
-    <!-- Receive Screen -->
     <string name="receive_title">Receive QBX</string>
     <string name="receive_your_address">Your PQ Address</string>
     <string name="receive_copy_address">Copy address</string>
     <string name="receive_secured">Dilithium3 / ML-DSA-65 secured</string>
-
-    <!-- Settings Screen -->
     <string name="settings_title">Settings</string>
     <string name="settings_rpc_title">RPC Connection</string>
     <string name="settings_rpc_subtitle">Stateless RPC — no wallet data on server</string>
@@ -108,8 +94,6 @@
     <string name="settings_delete_confirm_title">Really delete wallet?</string>
     <string name="settings_delete_confirm_text">Your wallet will be permanently deleted. Make sure you have saved your backup key!</string>
     <string name="settings_delete_yes">Yes, delete</string>
-
-    <!-- Security / PIN -->
     <string name="settings_security">Security</string>
     <string name="settings_security_subtitle">Protect app access with PIN or biometrics</string>
     <string name="settings_pin_active">PIN active</string>
@@ -121,8 +105,6 @@
     <string name="settings_pin_error_length">PIN must be 4 digits</string>
     <string name="settings_pin_error_mismatch">PINs do not match</string>
     <string name="btn_save">Save</string>
-
-    <!-- Wallet Management -->
     <string name="settings_manage_wallets">Manage Wallets</string>
     <string name="settings_wallets_count">%d wallet(s) available</string>
     <string name="settings_rename">Rename</string>
@@ -130,19 +112,75 @@
     <string name="settings_create_wallet">Create new wallet</string>
     <string name="settings_new_wallet">New Wallet</string>
     <string name="settings_rename_wallet">Rename Wallet</string>
-
-    <!-- About -->
     <string name="settings_about">About</string>
-    <string name="settings_version">Q-BitX Wallet v1.4.6</string>
+    <string name="settings_version">Q-BitX Wallet v1.6.4</string>
     <string name="settings_subtitle">Post-Quantum Light Wallet · Dilithium3 / ML-DSA-65</string>
     <string name="seed_title">Your words. Your wallet.</string>
     <string name="seed_instruction">Write these 24 words on paper, in order. They restore your QBX wallet. Keep them offline and never share them.</string>
     <string name="seed_written">I wrote down all 24 words</string>
-    <string name="seed_check_instruction">Enter words 4, 12 and 20, separated by spaces.</string>
+    <string name="seed_check_instruction">Enter words 4, 12 and 20 in separate boxes. Each correct word unlocks the next box.</string>
     <string name="seed_confirm">Confirm your backup</string>
-    <string name="seed_open">Open wallet</string>
+    <string name="seed_open">Continue</string>
     <string name="seed_show_again">Show words again</string>
-    <string name="seed_format">Recovery: qbx-pqhd-v1 · no passphrase</string>
+    <string name="seed_format">24 English BIP39 words · Q-BitX indexed PQ accounts · no passphrase</string>
     <string name="receive_show_legacy">Show legacy address (M…)</string>
     <string name="receive_show_native">Show native PQ address (dil1q…)</string>
+    <string name="seed_word_number">Word %1$d</string>
+    <string name="answer_correct">Correct</string>
+    <string name="answer_incorrect">Incorrect</string>
+    <string name="save_wallet_dat">Save wallet.dat</string>
+    <string name="numbered_address">Address %1$d · %2$s</string>
+    <string name="address_witness">PQ witness</string>
+    <string name="address_legacy">PQ legacy</string>
+    <string name="all_addresses">All addresses (%1$d)</string>
+    <string name="language_title">Choose your language</string>
+    <string name="language_setting">Language</string>
+    <string name="continue_button">Continue</string>
+    <string name="repeat_button">Repeat</string>
+    <string name="safety_title">Wallet security · %1$d/2</string>
+    <string name="safety_question_1">Someone claiming to be the Q-BitX team asks for your seed phrase. What should you do?</string>
+    <string name="safety_question_2">If I lose my seed phrase and every wallet.dat backup, who can restore my access?</string>
+    <string name="safety_wrong_1">Yes, I must provide my seed phrase</string>
+    <string name="safety_right_1">No, they are scammers</string>
+    <string name="safety_wrong_2">The Q-BitX team can recover my wallet and funds</string>
+    <string name="safety_right_2">The team cannot recover my access</string>
+    <string name="safety_explanation_1">The Q-BitX team will never ask for your seed phrase or wallet.dat file. Anyone asking for them is a scammer.</string>
+    <string name="safety_explanation_2">The Q-BitX team has no access to your wallets or recovery backups. If every copy of your seed, keys and recovery files is lost, access to your funds is lost forever.</string>
+    <string name="protect_wallet_title">Protect your wallet</string>
+    <string name="protect_wallet_message">Set a screen lock in Android settings, then reopen Q-BitX.</string>
+    <string name="close_button">Close</string>
+    <string name="import_file_hint">Core SQLite wallet.dat: all PQ keys are imported as separate accounts. Balance is shown for the selected account. Encrypted and Berkeley DB files are not supported.</string>
+    <string name="seed_import_hint">24 English seed words or legacy key backup</string>
+    <string name="seed_backup_hint">One seed restores its accounts. Keep the words offline. Re-add accounts in order after seed recovery; wallet.dat saves every stored account.</string>
+    <string name="dat_export">Export wallet.dat</string>
+    <string name="dat_export_hint">Unencrypted Core SQLite backup of all wallets and accounts stored in this app.</string>
+    <string name="dat_warning_title">Unencrypted wallet.dat</string>
+    <string name="dat_warning_text">Anyone with this file can spend your QBX. Save it offline; never share it with support or upload it to a website. This file contains all wallet keys stored in this app.</string>
+    <string name="dat_saved">wallet.dat saved. Keep it offline and secret.</string>
+    <string name="dat_export_error">wallet.dat export failed: %1$s</string>
+    <string name="backup_export_error">Backup export failed: %1$s</string>
+    <string name="import_file_error">Import failed: %1$s</string>
+    <string name="account_name">Account %1$d</string>
+    <string name="balance_refresh_error">Balance update failed; showing the last known balance: %1$s</string>
+    <string name="account_balance_label">Selected account balance</string>
+    <string name="seed_heading">SEED / 24 WORDS</string>
+    <string name="wallet_integrity_error">Wallet integrity check failed. Restore your backup before using this wallet.</string>
+    <string name="create_wallet_error">Could not create account: %1$s</string>
+    <string name="connect_error">Could not connect to the node: %1$s</string>
+    <string name="send_error">Sending failed: %1$s</string>
+    <string name="import_error">Import failed: %1$s</string>
+    <string name="scanning_history">Scanning blockchain…</string>
+    <string name="scanning_blocks">Scanning blocks: %1$d percent</string>
+    <string name="payment_title">Confirm signed payment</string>
+    <string name="payment_send">Send QBX</string>
+    <string name="payment_summary">Recipient:\n%1$s\n\nAmount: %2$s QBX\nExact fee: %3$s QBX</string>
+    <string name="signing_progress">Signing</string>
+    <string name="invalid_amount">Invalid amount</string>
+    <string name="invalid_recipient">Invalid recipient address</string>
+    <string name="no_wallet">No wallet available</string>
+    <string name="no_utxos">No spendable outputs available</string>
+    <string name="no_connection">No valid node connection. Check the RPC URL and reconnect.</string>
+    <string name="multiple_transactions">This payment needs multiple transactions. Send a smaller amount.</string>
+    <string name="payment_cancelled">Payment cancelled</string>
+    <string name="uncertain_broadcast">Broadcast status uncertain. Inputs remain locked; check the explorer before retrying. %1$s</string>
 </resources>
