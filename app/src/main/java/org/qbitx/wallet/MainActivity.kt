@@ -11,6 +11,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.repeatOnLifecycle
 import org.qbitx.wallet.ui.*
 import org.qbitx.wallet.ui.theme.QBitXWalletTheme
 
@@ -66,6 +67,16 @@ class MainActivity : FragmentActivity() {
                 val state by viewModel.uiState.collectAsState()
                 var currentScreen by remember { mutableStateOf("home") }
                 var selectedReceiveAddress by remember { mutableStateOf("") }
+                androidx.compose.runtime.LaunchedEffect(currentScreen,state.hasWallet,state.isLocked,state.pendingSeed) {
+                    if (state.hasWallet && !state.isLocked && state.pendingSeed==null && currentScreen in listOf("home","history")) {
+                        lifecycle.repeatOnLifecycle(androidx.lifecycle.Lifecycle.State.RESUMED) {
+                            while (true) {
+                                viewModel.refreshBalance()
+                                kotlinx.coroutines.delay(30_000)
+                            }
+                        }
+                    }
+                }
                 if (state.pendingSendSummary != null) {
                     androidx.compose.material3.AlertDialog(
                         onDismissRequest = { viewModel.approveSend(false) },
@@ -129,6 +140,7 @@ class MainActivity : FragmentActivity() {
                         "receive-address" -> WalletReceiveScreen(state = state, requestedAddress = selectedReceiveAddress, onBack = { currentScreen = "addresses" })
                         "history" -> HistoryScreen(
                             state = state,
+                            onRefresh = { viewModel.refreshBalance() },
                             onBack = { currentScreen = "home" }
                         )
                         "settings" -> SettingsScreen(

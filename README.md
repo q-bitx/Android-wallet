@@ -21,7 +21,19 @@ See SECURITY_REVIEW.md, DESIGN_SYSTEM.md and the separate delivered audit report
 - Single-transaction payments, maximum fee 0.1 QBX. Smaller payments may be needed for
   wallets with many inputs. An ambiguous broadcast timeout must not be retried blindly.
 
-## Download 1.6.8
+## Download 1.6.9
+
+[Download APK](https://github.com/q-bitx/Android-wallet/releases/download/v1.6.9-history-status-preview/QBitX-Android-1.6.9-history-status-preview.apk)
+
+[Release and verification report](https://github.com/q-bitx/Android-wallet/releases/tag/v1.6.9-history-status-preview)
+
+Repairs confirmed outgoing payments stuck as Pending while txindex is unavailable.
+History uses known UTXO heights, saved block hashes and confirmed output lookup;
+confirmed payments clear the stale pending amount immediately. Foreground home/history
+screens refresh every 30 seconds, and history has a manual refresh button. An unavailable
+status is shown explicitly rather than inferred from missing transaction data.
+
+## Previous 1.6.8
 
 [Download APK](https://github.com/q-bitx/Android-wallet/releases/download/v1.6.8-balance-index-preview/QBitX-Android-1.6.8-balance-index-preview.apk)
 

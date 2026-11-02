@@ -113,7 +113,7 @@
     <string name="settings_new_wallet">Ví mới</string>
     <string name="settings_rename_wallet">Đổi tên ví</string>
     <string name="settings_about">Về</string>
-    <string name="settings_version">Q-BitX Wallet v1.6.8</string>
+    <string name="settings_version">Q-BitX Wallet v1.6.9</string>
     <string name="settings_subtitle">Ví ánh sáng hậu lượng tử · Dilithium3 / ML-DSA-65</string>
     <string name="seed_title">Lời nói của bạn. Ví của bạn.</string>
     <string name="seed_instruction">Viết 24 từ này ra giấy theo thứ tự. Họ khôi phục ví QBX của bạn. Giữ chúng ngoại tuyến và không bao giờ chia sẻ chúng.</string>
@@ -185,4 +185,5 @@
     <string name="uncertain_broadcast">Trạng thái phát chưa rõ. Các đầu vào vẫn bị khóa; kiểm tra trình khám phá trước khi thử lại. %1$s</string>
     <string name="address_all_wallets">Tất cả ví</string>
     <string name="address_balance_order">Số dư khả dụng: từ cao đến thấp. Nhấn địa chỉ để nhận.</string>
+    <string name="tx_unknown">Chưa xác định trạng thái</string>
 </resources>

@@ -113,7 +113,7 @@
     <string name="settings_new_wallet">新しいアカウント</string>
     <string name="settings_rename_wallet">ウォレット名を変更</string>
     <string name="settings_about">アプリについて</string>
-    <string name="settings_version">Q-BitX Wallet v1.6.8</string>
+    <string name="settings_version">Q-BitX Wallet v1.6.9</string>
     <string name="settings_subtitle">耐量子ライトウォレット · Dilithium3 / ML-DSA-65</string>
     <string name="seed_title">あなたの言葉。あなたのウォレット。</string>
     <string name="seed_instruction">24個の単語を順番どおりに紙に書き留めてください。QBXウォレットの復元に必要です。オフラインで保管し、絶対に共有しないでください。</string>
@@ -185,4 +185,5 @@
     <string name="uncertain_broadcast">配信状況が不明です。入力はロックされたままです。再試行の前にエクスプローラーで確認してください。%1$s</string>
     <string name="address_all_wallets">すべてのウォレット</string>
     <string name="address_balance_order">利用可能残高の多い順です。受取先アドレスをタップしてください。</string>
+    <string name="tx_unknown">状態を確認できません</string>
 </resources>

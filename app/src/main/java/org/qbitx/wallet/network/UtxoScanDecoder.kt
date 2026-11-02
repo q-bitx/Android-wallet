@@ -31,7 +31,7 @@ internal object UtxoScanDecoder {
             val confs=height-outputHeight+1
             val isCoinbase=if(confs>=100) false else coinbases[txid to outputHeight] ?: coinbase(txid,outputHeight).also { coinbases[txid to outputHeight]=it }
             if(isCoinbase && confs<100) immatureSat=Math.addExact(immatureSat,sat)
-            Utxo(txid,vout,owner,sat/100_000_000.0,confs,script,isCoinbase)
+            Utxo(txid,vout,owner,sat/100_000_000.0,confs,script,isCoinbase,outputHeight)
         }
         require(obj.get("total_amount").asBigDecimal.movePointRight(8).longValueExact()==totalSat) { "RPC balance and UTXO sum disagree" }
         val immature=unspents.filter { it.isCoinbase && it.confirmations<100 }

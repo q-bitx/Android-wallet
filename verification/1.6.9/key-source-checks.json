@@ -1,0 +1,12 @@
+{
+  "app\\src\\main\\java\\org\\qbitx\\wallet\\crypto\\AddressUtils.kt": "identical",
+  "app\\src\\main\\java\\org\\qbitx\\wallet\\crypto\\AmountInput.kt": "identical",
+  "app\\src\\main\\java\\org\\qbitx\\wallet\\crypto\\DilithiumNative.kt": "identical",
+  "app\\src\\main\\java\\org\\qbitx\\wallet\\crypto\\PinProtection.kt": "identical",
+  "app\\src\\main\\java\\org\\qbitx\\wallet\\crypto\\SeedWallet.kt": "identical",
+  "app\\src\\main\\java\\org\\qbitx\\wallet\\crypto\\SendPlanner.kt": "identical",
+  "app\\src\\main\\java\\org\\qbitx\\wallet\\crypto\\TransactionBuilder.kt": "identical",
+  "app\\src\\main\\java\\org\\qbitx\\wallet\\crypto\\TransactionPolicy.kt": "identical",
+  "app\\src\\main\\java\\org\\qbitx\\wallet\\data\\CoreWalletDat.kt": "identical",
+  "app\\src\\main\\java\\org\\qbitx\\wallet\\data\\KeyManager.kt": "KeyManager implementation identical; TxRecord metadata declaration extended"
+}

@@ -21,7 +21,8 @@ data class TxRecord(
     val timestamp: Long,
     val walletId: Int,
     val direction: String = "out",      // "in" or "out"
-    val confirmations: Int = -1          // -1 = unknown, 0 = pending
+    val confirmations: Int = -1,         // -1 = unknown, 0 = verified/locally accepted pending
+    val blockHash: String? = null
 )
 
 class KeyManager(context: Context, preferencesOverride: android.content.SharedPreferences? = null) {

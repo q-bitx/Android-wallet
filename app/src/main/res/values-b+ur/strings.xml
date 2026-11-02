@@ -113,7 +113,7 @@
     <string name="settings_new_wallet">نیا اکاؤنٹ</string>
     <string name="settings_rename_wallet">والیٹ کا نام بدلیں</string>
     <string name="settings_about">تعارف</string>
-    <string name="settings_version">Q-BitX Wallet v1.6.8</string>
+    <string name="settings_version">Q-BitX Wallet v1.6.9</string>
     <string name="settings_subtitle">پوسٹ کوانٹم لائٹ والیٹ · Dilithium3 / ML-DSA-65</string>
     <string name="seed_title">آپ کے الفاظ۔ آپ کا والیٹ۔</string>
     <string name="seed_instruction">یہ 24 الفاظ ترتیب سے کاغذ پر لکھیں۔ ان سے آپ کا QBX والیٹ بحال ہوتا ہے۔ انہیں آف لائن محفوظ رکھیں اور کبھی کسی کو نہ دیں۔</string>
@@ -185,4 +185,5 @@
     <string name="uncertain_broadcast">نشر کی حالت غیر یقینی ہے۔ اِن پٹس مقفل رہیں گے؛ دوبارہ کوشش سے پہلے ایکسپلورر دیکھیں۔ %1$s</string>
     <string name="address_all_wallets">تمام والیٹس</string>
     <string name="address_balance_order">دستیاب بیلنس: زیادہ سے کم۔ وصول کرنے کے لیے پتہ دبائیں۔</string>
+    <string name="tx_unknown">حیثیت دستیاب نہیں</string>
 </resources>

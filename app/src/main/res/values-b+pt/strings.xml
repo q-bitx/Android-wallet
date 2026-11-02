@@ -113,7 +113,7 @@
     <string name="settings_new_wallet">Nova carteira</string>
     <string name="settings_rename_wallet">Renomear carteira</string>
     <string name="settings_about">Sobre</string>
-    <string name="settings_version">Q-BitX Wallet v1.6.8</string>
+    <string name="settings_version">Q-BitX Wallet v1.6.9</string>
     <string name="settings_subtitle">Carteira Pós-Quantum Light · Dilithium3 / ML-DSA-65</string>
     <string name="seed_title">Suas palavras. Sua carteira.</string>
     <string name="seed_instruction">Escreva essas 24 palavras no papel, em ordem. Eles restauram sua carteira QBX. Mantenha-os off-line e nunca os compartilhe.</string>
@@ -185,4 +185,5 @@
     <string name="uncertain_broadcast">Estado de transmissão incerto. As entradas continuam bloqueadas; verifique o explorador antes de tentar novamente. %1$s</string>
     <string name="address_all_wallets">Todas as carteiras</string>
     <string name="address_balance_order">Saldo disponível do maior para o menor. Toque no endereço para receber.</string>
+    <string name="tx_unknown">Status indisponível</string>
 </resources>

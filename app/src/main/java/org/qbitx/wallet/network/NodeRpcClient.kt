@@ -315,10 +315,10 @@ class NodeRpcClient(
     }
 
     /** Get full transaction details (verbose). */
-    suspend fun getTransactionDetails(txid: String): TxDetail? {
+    suspend fun getTransactionDetails(txid: String, blockHeight: Int? = null, blockHash: String? = null): TxDetail? {
         return try {
-            val result = call("getrawtransaction", txid, true)
-            val tx = result.getAsJsonObject("result") ?: return null
+            val locator = TransactionLocator { method, params -> call(method,*params.toTypedArray()) }
+            val tx = locator.find(txid,blockHeight,blockHash) ?: return null
             val confs = tx.get("confirmations")?.asInt ?: 0
             val time = tx.get("time")?.asLong ?: tx.get("blocktime")?.asLong ?: 0L
 
@@ -344,7 +344,8 @@ class NodeRpcClient(
                 }
             } ?: emptyList()
 
-            TxDetail(txid, confs, time, vouts, vinList)
+            TxDetail(txid, confs, time, vouts, vinList,tx.get("blockhash")?.asString)
+        } catch (e: kotlinx.coroutines.CancellationException) { throw e
         } catch (_: Exception) {
             null
         }
@@ -363,6 +364,7 @@ class NodeRpcClient(
                         return true
                     }
                 }
+            } catch (e: kotlinx.coroutines.CancellationException) { throw e
             } catch (_: Exception) {}
         }
         return false
@@ -416,7 +418,7 @@ class NodeRpcClient(
 
 data class SendResult(val txid: String, val fee: Long)
 data class BlockchainInfo(val chain: String, val blocks: Int, val headers: Int, val bestBlockHash: String)
-data class Utxo(val txid: String, val vout: Int, val address: String, val amount: Double, val confirmations: Int, val scriptPubKey: String, val isCoinbase: Boolean = false)
+data class Utxo(val txid: String, val vout: Int, val address: String, val amount: Double, val confirmations: Int, val scriptPubKey: String, val isCoinbase: Boolean = false, val height: Int = -1)
 data class ScanResult(val totalAmount: Double, val unspents: List<Utxo>, val immatureAmount: Double = 0.0, val immatureBlocks: Int = 0)
 
 data class TxVout(val value: Double, val addresses: List<String>)
@@ -426,7 +428,8 @@ data class TxDetail(
     val confirmations: Int,
     val time: Long,       // unix epoch seconds
     val voutList: List<TxVout>,
-    val vinList: List<TxVin>  // txid:vout pairs of inputs
+    val vinList: List<TxVin>, // txid:vout pairs of inputs
+    val blockHash: String? = null
 )
 
 class RpcException(message: String) : Exception(message)

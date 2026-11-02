@@ -678,14 +678,17 @@ fun WalletScreen(
                             )
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Text(dateFormat.format(Date(tx.timestamp)), fontSize = 11.sp, color = QBXOnSurfaceDim)
-                                if (tx.confirmations in 0..5) {
+                                if (tx.confirmations >= -1) {
                                     Spacer(Modifier.width(6.dp))
                                     Text(
-                                        if (tx.confirmations == 0) stringResource(R.string.tx_pending)
-                                        else stringResource(R.string.tx_confirmations, tx.confirmations),
+                                        when {
+                                            tx.confirmations < 0 -> stringResource(R.string.tx_unknown)
+                                            tx.confirmations == 0 -> stringResource(R.string.tx_pending)
+                                            else -> stringResource(R.string.tx_confirmations, tx.confirmations)
+                                        },
                                         fontSize = 10.sp,
-                                        color = if (tx.confirmations == 0) androidx.compose.ui.graphics.Color(0xFFFFAB40)
-                                               else QBXOnSurfaceDim.copy(alpha = 0.6f)
+                                        color = if (tx.confirmations <= 0) androidx.compose.ui.graphics.Color(0xFFFFAB40)
+                                               else QBXGreen.copy(alpha = 0.7f)
                                     )
                                 }
                             }
@@ -1317,7 +1320,8 @@ fun generateQrCode(text: String): Bitmap? {
 @Composable
 fun HistoryScreen(
     state: WalletUiState,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    onRefresh: () -> Unit = {}
 ) {
     Column(
         modifier = Modifier
@@ -1337,12 +1341,14 @@ fun HistoryScreen(
                 Icon(Icons.Default.ArrowBack, stringResource(R.string.send_back), tint = QBXOnSurface)
             }
             Spacer(Modifier.width(4.dp))
-            Text(stringResource(R.string.history_title), fontSize = 20.sp, fontWeight = FontWeight.SemiBold, color = QBXOnSurface)
-            Spacer(Modifier.weight(1f))
+            Text(stringResource(R.string.history_title), fontSize = 20.sp, fontWeight = FontWeight.SemiBold, color = QBXOnSurface, modifier = Modifier.weight(1f))
             Text(
                 stringResource(R.string.history_count, state.txHistory.size),
                 fontSize = 13.sp, color = QBXOnSurfaceDim
             )
+            IconButton(onClick=onRefresh,enabled=!state.isLoading && !state.isLocked) {
+                Icon(Icons.Default.Refresh,stringResource(R.string.btn_refresh),tint=QBXMint)
+            }
         }
 
         if (state.txHistory.isEmpty()) {
@@ -1423,15 +1429,18 @@ fun HistoryScreen(
                             )
                             Spacer(Modifier.weight(1f))
                             // Confirmation badge
-                            if (tx.confirmations >= 0) {
+                            if (tx.confirmations >= -1) {
                                 val badgeColor = when {
-                                    tx.confirmations == 0 -> androidx.compose.ui.graphics.Color(0xFFFFAB40)
+                                    tx.confirmations <= 0 -> androidx.compose.ui.graphics.Color(0xFFFFAB40)
                                     tx.confirmations < 6 -> androidx.compose.ui.graphics.Color(0xFFFFAB40).copy(alpha = 0.7f)
                                     else -> QBXGreen.copy(alpha = 0.7f)
                                 }
                                 Text(
-                                    if (tx.confirmations == 0) stringResource(R.string.tx_pending)
-                                    else stringResource(R.string.tx_confirmations, tx.confirmations),
+                                    when {
+                                        tx.confirmations < 0 -> stringResource(R.string.tx_unknown)
+                                        tx.confirmations == 0 -> stringResource(R.string.tx_pending)
+                                        else -> stringResource(R.string.tx_confirmations, tx.confirmations)
+                                    },
                                     fontSize = 11.sp, color = badgeColor, fontWeight = FontWeight.SemiBold
                                 )
                             }

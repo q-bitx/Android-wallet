@@ -135,17 +135,7 @@ class WalletViewModel(application: Application) : AndroidViewModel(application) 
         )
     }
 
-    /** Sum all pending outgoing TXs (negative delta in QBX). */
-    private fun pendingOutDelta(history: List<TxRecord>): Double = history
-        .filter { it.confirmations == 0 && it.direction == "out" }
-        .sumOf { -(it.amount + parseFeeQbx(it.fee)) }
-
-    /** Parse a stored fee string like "0.00053500 QBX" back to a Double in QBX. */
-    private fun parseFeeQbx(fee: String): Double {
-        if (fee.isBlank()) return 0.0
-        val number = fee.trim().split(' ').firstOrNull()?.replace(',', '.') ?: return 0.0
-        return number.toDoubleOrNull() ?: 0.0
-    }
+    private fun pendingOutDelta(history: List<TxRecord>): Double = HistoryState.pendingOutgoing(history)
 
     fun createWallet(name: String = "") {
         if (paymentInProgress || _uiState.value.isLoading) return
@@ -266,7 +256,7 @@ class WalletViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     fun refreshBalance() {
-        if (isRefreshing || addressBalanceJob?.isActive == true) return
+        if (paymentInProgress || _uiState.value.isLoading || _uiState.value.isLocked || isRefreshing || addressBalanceJob?.isActive == true) return
         val generation=++refreshGeneration
         refreshJob = viewModelScope.launch {
             isRefreshing = true
@@ -289,7 +279,7 @@ class WalletViewModel(application: Application) : AndroidViewModel(application) 
                         immatureBalance = scanResult.immatureAmount,
                         immatureBlocks = scanResult.immatureBlocks
                     )
-                    scanTxHistory(address, scanResult.unspents.map { it.txid }.distinct())
+                    scanTxHistory(address, scanResult.unspents, generation)
                 }
 
                 val info = infoDeferred.await()
@@ -311,28 +301,18 @@ class WalletViewModel(application: Application) : AndroidViewModel(application) 
 
     /**
      * Fetch TX details and build TxRecords.
-     * Handles both already-confirmed (cached) and fresh fetches.
+     * Revalidates confirmed and pending history using saved block hashes and UTXO heights.
      */
     private suspend fun fetchTxRecords(
         txids: List<String>,
         localByTxid: Map<String, TxRecord>,
         myAddress: String,
-        walletId: Int
+        walletId: Int,
+        knownHeights: Map<String,Int> = emptyMap()
     ): List<TxRecord> {
-        val CONFIRMED_THRESHOLD = 6
-        val alreadyConfirmed = mutableListOf<TxRecord>()
-        val txidsToFetch = mutableListOf<String>()
-
-        for (txid in txids) {
-            val local = localByTxid[txid]
-            if (local != null && local.confirmations >= CONFIRMED_THRESHOLD) {
-                alreadyConfirmed.add(local)
-            } else {
-                txidsToFetch.add(txid)
-            }
-        }
-
-        if (txidsToFetch.isEmpty()) return alreadyConfirmed
+        val txidsToFetch = txids
+        if (txidsToFetch.isEmpty()) return emptyList()
+        val myWitnessAddress = _uiState.value.witnessAddress
 
         val semaphore = Semaphore(8)
         val fetchedDetails: List<Pair<String, TxDetail?>> = coroutineScope {
@@ -340,7 +320,7 @@ class WalletViewModel(application: Application) : AndroidViewModel(application) 
                 async {
                     semaphore.acquire()
                     try {
-                        txid to rpcClient.getTransactionDetails(txid)
+                        txid to rpcClient.getTransactionDetails(txid,knownHeights[txid],localByTxid[txid]?.blockHash)
                     } finally {
                         semaphore.release()
                     }
@@ -349,13 +329,12 @@ class WalletViewModel(application: Application) : AndroidViewModel(application) 
         }
 
         val records = mutableListOf<TxRecord>()
-        records.addAll(alreadyConfirmed)
 
         for ((txid, detail) in fetchedDetails) {
             val local = localByTxid[txid]
 
             if (detail == null) {
-                if (local != null) records.add(local)
+                if (local != null) records.add(HistoryState.reconcile(local,null))
                 continue
             }
 
@@ -363,7 +342,6 @@ class WalletViewModel(application: Application) : AndroidViewModel(application) 
             var sentToOther = 0.0
             var otherAddress = ""
 
-            val myWitnessAddress = _uiState.value.witnessAddress
             for (vo in detail.voutList) {
                 if (vo.addresses.contains(myAddress) ||
                     (myWitnessAddress.isNotEmpty() && vo.addresses.contains(myWitnessAddress))
@@ -389,7 +367,7 @@ class WalletViewModel(application: Application) : AndroidViewModel(application) 
 
             if (isSender) {
                 if (local != null) {
-                    records.add(local.copy(confirmations = detail.confirmations))
+                    records.add(HistoryState.reconcile(local,detail))
                 } else {
                     records.add(
                         TxRecord(
@@ -400,7 +378,8 @@ class WalletViewModel(application: Application) : AndroidViewModel(application) 
                             timestamp = timestamp,
                             walletId = walletId,
                             direction = "out",
-                            confirmations = detail.confirmations
+                            confirmations = detail.confirmations,
+                            blockHash = detail.blockHash
                         )
                     )
                 }
@@ -415,7 +394,8 @@ class WalletViewModel(application: Application) : AndroidViewModel(application) 
                             timestamp = timestamp,
                             walletId = walletId,
                             direction = "in",
-                            confirmations = detail.confirmations
+                            confirmations = detail.confirmations,
+                            blockHash = detail.blockHash
                         )
                     )
                 }
@@ -430,7 +410,9 @@ class WalletViewModel(application: Application) : AndroidViewModel(application) 
      * Phase 1: Immediately show TXs from UTXOs + local history.
      * Phase 2: Scan blockchain for additional TXs (incremental, may take minutes).
      */
-    private suspend fun scanTxHistory(myAddress: String, utxoTxids: List<String>) {
+    private suspend fun scanTxHistory(myAddress: String, utxos: List<org.qbitx.wallet.network.Utxo>, generation: Long) {
+        val utxoTxids = utxos.map { it.txid }.distinct()
+        val knownHeights = utxos.filter { it.height>=0 }.associate { it.txid to it.height }
         val walletId = keyManager.getActiveWalletId()
         val localHistory = keyManager.getTxHistoryForActiveWallet()
         val localByTxid = localHistory.associateBy { it.txid }
@@ -439,7 +421,7 @@ class WalletViewModel(application: Application) : AndroidViewModel(application) 
         val baseTxids = (utxoTxids + localHistory.map { it.txid }).distinct()
         if (baseTxids.isNotEmpty()) {
             try {
-                val baseRecords = fetchTxRecords(baseTxids, localByTxid, myAddress, walletId)
+                val baseRecords = fetchTxRecords(baseTxids, localByTxid, myAddress, walletId, knownHeights)
                 // Re-read storage to preserve TXs added during processing (e.g. from sendQBX)
                 val latestLocal = keyManager.getTxHistoryForActiveWallet()
                 val resultByTxid = baseRecords.associateBy { it.txid }
@@ -451,20 +433,18 @@ class WalletViewModel(application: Application) : AndroidViewModel(application) 
                 }
                 val sorted = merged.sortedByDescending { it.timestamp }
                 // Only write if still on the same wallet (guard against cancelled/stale jobs)
-                if (keyManager.getActiveWalletId() == walletId) {
+                if (keyManager.getActiveWalletId() == walletId && generation == refreshGeneration) {
                     keyManager.replaceTxHistoryForWallet(sorted, walletId)
-                    _uiState.value = _uiState.value.copy(txHistory = sorted)
+                    _uiState.value = _uiState.value.copy(txHistory = sorted, unconfirmedBalance = pendingOutDelta(sorted))
 
                     // Clear pending-spent outpoints once all our recent out-TXs
                     // are confirmed (>= 1 confirmation). Keeps the lockset from
                     // growing forever. If any TX is still unconfirmed, leave it.
-                    val anyUnconfirmedOut = sorted.any {
-                        it.direction == "out" && it.confirmations == 0
-                    }
-                    if (!anyUnconfirmedOut) {
+                    if (HistoryState.canReleasePendingLocks(sorted)) {
                         keyManager.clearPendingSpentOutpoints(walletId)
                     }
                 }
+            } catch (e: kotlinx.coroutines.CancellationException) { throw e
             } catch (_: Exception) {}
         }
 
@@ -503,29 +483,31 @@ class WalletViewModel(application: Application) : AndroidViewModel(application) 
                     isScanningHistory = false,
                     scanProgressText = null
                 )
-                if (highestScanned > lastScanned && keyManager.getActiveWalletId() == walletId) {
+                if (highestScanned > lastScanned && keyManager.getActiveWalletId() == walletId && generation == refreshGeneration) {
                     keyManager.setLastScannedHeight(walletId, highestScanned)
                 }
 
                 // Fetch details for newly discovered TXs
                 val newTxids = txids.filter { it !in baseTxids }
-                if (newTxids.isNotEmpty() && keyManager.getActiveWalletId() == walletId) {
+                if (newTxids.isNotEmpty() && keyManager.getActiveWalletId() == walletId && generation == refreshGeneration) {
                     val currentHistory = keyManager.getTxHistoryForActiveWallet()
                     val currentByTxid = currentHistory.associateBy { it.txid }
                     val extraTxids = newTxids.filter { it !in currentByTxid }
                     if (extraTxids.isNotEmpty()) {
                         val newRecords = fetchTxRecords(extraTxids, currentByTxid, myAddress, walletId)
+                        if (keyManager.getActiveWalletId()!=walletId || generation!=refreshGeneration) return
                         val combined = (currentHistory + newRecords).sortedByDescending { it.timestamp }
                         keyManager.replaceTxHistoryForWallet(combined, walletId)
-                        _uiState.value = _uiState.value.copy(txHistory = combined)
+                        _uiState.value = _uiState.value.copy(txHistory = combined, unconfirmedBalance = pendingOutDelta(combined))
                     }
                 }
 
                 // Save TX count after successful scan for data-loss detection
-                if (keyManager.getActiveWalletId() == walletId) {
+                if (keyManager.getActiveWalletId() == walletId && generation == refreshGeneration) {
                     keyManager.setLastScanTxCount(walletId, keyManager.getTxHistoryForActiveWallet().size)
                 }
             }
+        } catch (e: kotlinx.coroutines.CancellationException) { throw e
         } catch (_: Exception) {
             _uiState.value = _uiState.value.copy(
                 isScanningHistory = false,
