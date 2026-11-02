@@ -21,7 +21,18 @@ See SECURITY_REVIEW.md, DESIGN_SYSTEM.md and the separate delivered audit report
 - Single-transaction payments, maximum fee 0.1 QBX. Smaller payments may be needed for
   wallets with many inputs. An ambiguous broadcast timeout must not be retried blindly.
 
-## Download 1.6.7
+## Download 1.6.8
+
+[Download APK](https://github.com/q-bitx/Android-wallet/releases/download/v1.6.8-balance-index-preview/QBitX-Android-1.6.8-balance-index-preview.apk)
+
+[Release and verification report](https://github.com/q-bitx/Android-wallet/releases/tag/v1.6.8-balance-index-preview)
+
+Fixes balance refresh for recently confirmed outputs while the RPC transaction index
+is unavailable or still indexing. Coinbase maturity checks use the output block hash;
+ordinary transfers do not need to wait for the transaction index. Mining rewards
+remain excluded until mature. See BALANCE_INDEX_1_6_8.md for tests and limitations.
+
+## Previous 1.6.7
 
 [Download APK](https://github.com/q-bitx/Android-wallet/releases/download/v1.6.7-receive-account-preview/QBitX-Android-1.6.7-receive-account-preview.apk)
 

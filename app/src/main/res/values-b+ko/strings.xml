@@ -113,7 +113,7 @@
     <string name="settings_new_wallet">새 계정</string>
     <string name="settings_rename_wallet">지갑 이름 변경</string>
     <string name="settings_about">정보</string>
-    <string name="settings_version">Q-BitX Wallet v1.6.7</string>
+    <string name="settings_version">Q-BitX Wallet v1.6.8</string>
     <string name="settings_subtitle">양자내성 라이트 지갑 · Dilithium3 / ML-DSA-65</string>
     <string name="seed_title">나의 단어. 나의 지갑.</string>
     <string name="seed_instruction">24개 단어를 순서대로 종이에 적으세요. 이 단어로 QBX 지갑을 복원합니다. 오프라인으로 보관하고 절대 공유하지 마세요.</string>

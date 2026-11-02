@@ -113,7 +113,7 @@
     <string name="settings_new_wallet">Yeni Cüzdan</string>
     <string name="settings_rename_wallet">Cüzdanı Yeniden Adlandır</string>
     <string name="settings_about">Hakkında</string>
-    <string name="settings_version">Q-BitX Wallet v1.6.7</string>
+    <string name="settings_version">Q-BitX Wallet v1.6.8</string>
     <string name="settings_subtitle">Kuantum Sonrası Işık Cüzdanı · Dilithium3 / ML-DSA-65</string>
     <string name="seed_title">Senin sözlerin. Cüzdanın.</string>
     <string name="seed_instruction">Bu 24 kelimeyi sırayla kağıda yazın. QBX cüzdanınızı geri yüklerler. Bunları çevrimdışı tutun ve asla paylaşmayın.</string>

@@ -113,7 +113,7 @@
     <string name="settings_new_wallet">محفظة جديدة</string>
     <string name="settings_rename_wallet">إعادة تسمية المحفظة</string>
     <string name="settings_about">عن</string>
-    <string name="settings_version">Q-BitX Wallet v1.6.7</string>
+    <string name="settings_version">Q-BitX Wallet v1.6.8</string>
     <string name="settings_subtitle">محفظة Post-Quantum Light · Dilithium3 / ML-DSA-65</string>
     <string name="seed_title">كلماتك. محفظتك.</string>
     <string name="seed_instruction">اكتب هذه الكلمات الـ 24 على الورق بالترتيب. يقومون باستعادة محفظتك QBX. احتفظ بها في وضع عدم الاتصال ولا تشاركها أبدًا.</string>

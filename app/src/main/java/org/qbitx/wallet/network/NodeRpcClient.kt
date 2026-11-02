@@ -173,19 +173,8 @@ class NodeRpcClient(
         val result = call("scantxoutset", "start", scanObjects)
         val obj = result.getAsJsonObject("result")
             ?: throw RpcException("Invalid UTXO scan response")
-        return UtxoScanDecoder.decode(obj,address,extraAddress,::isCoinbaseTx)
-    }
-
-    /** Check if a transaction is a coinbase transaction. */
-    private suspend fun isCoinbaseTx(txid: String): Boolean {
-        return try {
-            val result = call("getrawtransaction", txid, true)
-            val tx = result.getAsJsonObject("result")
-            val vin = tx?.getAsJsonArray("vin")
-            vin != null && vin.size() > 0 && vin[0].asJsonObject.has("coinbase")
-        } catch (e: Exception) {
-            throw RpcException("Cannot verify coinbase maturity: ${e.message}")
-        }
+        val maturityLookup = BlockCoinbaseLookup { method, params -> call(method,*params.toTypedArray()) }
+        return UtxoScanDecoder.decode(obj,address,extraAddress,maturityLookup::isCoinbase)
     }
 
     /**

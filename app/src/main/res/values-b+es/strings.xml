@@ -113,7 +113,7 @@
     <string name="settings_new_wallet">Nueva billetera</string>
     <string name="settings_rename_wallet">Cambiar nombre de billetera</string>
     <string name="settings_about">Acerca de</string>
-    <string name="settings_version">Q-BitX Wallet v1.6.7</string>
+    <string name="settings_version">Q-BitX Wallet v1.6.8</string>
     <string name="settings_subtitle">Cartera ligera post-cuántica · Dilithium3 / ML-DSA-65</string>
     <string name="seed_title">Tus palabras. Tu billetera.</string>
     <string name="seed_instruction">Escribe estas 24 palabras en un papel, en orden. Restauran su billetera QBX. Mantenlos fuera de línea y nunca los compartas.</string>

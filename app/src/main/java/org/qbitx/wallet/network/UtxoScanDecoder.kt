@@ -6,14 +6,14 @@ import org.qbitx.wallet.crypto.TransactionPolicy
 
 /** Parse the same combined M/dil1q UTXO scan as upstream, with exact satoshi accounting. */
 internal object UtxoScanDecoder {
-    suspend fun decode(obj: JsonObject,address: String,extraAddress: String?,coinbase: suspend (String)->Boolean): ScanResult {
+    suspend fun decode(obj: JsonObject,address: String,extraAddress: String?,coinbase: suspend (String,Int)->Boolean): ScanResult {
         require(obj.get("success")?.asBoolean==true) { "UTXO scan did not complete" }
         val height=requireNotNull(obj.get("height")).asInt
         require(height>=0)
         val own=setOfNotNull(address,extraAddress?.takeIf { it.isNotBlank() })
         val outputs=requireNotNull(obj.getAsJsonArray("unspents")) { "Missing UTXOs" }
         val seen=mutableSetOf<String>()
-        val coinbases=mutableMapOf<String,Boolean>()
+        val coinbases=mutableMapOf<Pair<String,Int>,Boolean>()
         var totalSat=0L
         var immatureSat=0L
         val unspents=outputs.map { elem ->
@@ -29,7 +29,7 @@ internal object UtxoScanDecoder {
             val owner=TransactionPolicy.outputAddress(AddressUtils.fromHex(script))
             require(owner in own) { "RPC returned an output outside this wallet" }
             val confs=height-outputHeight+1
-            val isCoinbase=if(confs>=100) false else coinbases[txid] ?: coinbase(txid).also { coinbases[txid]=it }
+            val isCoinbase=if(confs>=100) false else coinbases[txid to outputHeight] ?: coinbase(txid,outputHeight).also { coinbases[txid to outputHeight]=it }
             if(isCoinbase && confs<100) immatureSat=Math.addExact(immatureSat,sat)
             Utxo(txid,vout,owner,sat/100_000_000.0,confs,script,isCoinbase)
         }

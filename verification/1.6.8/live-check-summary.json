@@ -1,0 +1,6 @@
+{
+  "passed": true,
+  "chain": "main",
+  "read_only": true,
+  "personal_receipt_parameters_in_repository": false
+}

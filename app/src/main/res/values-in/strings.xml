@@ -113,7 +113,7 @@
     <string name="settings_new_wallet">Akun baru</string>
     <string name="settings_rename_wallet">Ubah nama dompet</string>
     <string name="settings_about">Tentang</string>
-    <string name="settings_version">Q-BitX Wallet v1.6.7</string>
+    <string name="settings_version">Q-BitX Wallet v1.6.8</string>
     <string name="settings_subtitle">Dompet ringan pascakuantum · Dilithium3 / ML-DSA-65</string>
     <string name="seed_title">Kata Anda. Dompet Anda.</string>
     <string name="seed_instruction">Tuliskan 24 kata ini di kertas sesuai urutan. Kata-kata ini memulihkan dompet QBX Anda. Simpan secara offline dan jangan pernah dibagikan.</string>

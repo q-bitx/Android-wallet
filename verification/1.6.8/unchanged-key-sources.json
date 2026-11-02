@@ -1,0 +1,12 @@
+[
+  "app\\src\\main\\java\\org\\qbitx\\wallet\\crypto\\AddressUtils.kt",
+  "app\\src\\main\\java\\org\\qbitx\\wallet\\crypto\\AmountInput.kt",
+  "app\\src\\main\\java\\org\\qbitx\\wallet\\crypto\\DilithiumNative.kt",
+  "app\\src\\main\\java\\org\\qbitx\\wallet\\crypto\\PinProtection.kt",
+  "app\\src\\main\\java\\org\\qbitx\\wallet\\crypto\\SeedWallet.kt",
+  "app\\src\\main\\java\\org\\qbitx\\wallet\\crypto\\SendPlanner.kt",
+  "app\\src\\main\\java\\org\\qbitx\\wallet\\crypto\\TransactionBuilder.kt",
+  "app\\src\\main\\java\\org\\qbitx\\wallet\\crypto\\TransactionPolicy.kt",
+  "app\\src\\main\\java\\org\\qbitx\\wallet\\data\\CoreWalletDat.kt",
+  "app\\src\\main\\java\\org\\qbitx\\wallet\\data\\KeyManager.kt"
+]
