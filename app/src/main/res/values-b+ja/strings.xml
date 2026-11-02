@@ -53,7 +53,7 @@
     <string name="history_fee">手数料</string>
     <string name="history_date">日時</string>
     <string name="copied">コピーしました</string>
-    <string name="import_from_file">ファイルからインポート（.qbx / wallet.dat）</string>
+    <string name="import_from_file">ファイルからインポート（wallet.dat）</string>
     <string name="import_or_paste">— またはバックアップキーを手動で貼り付け —</string>
     <string name="backup_save_file">wallet.datを保存</string>
     <string name="backup_file_saved">ファイルを保存しました</string>
@@ -113,7 +113,7 @@
     <string name="settings_new_wallet">新しいアカウント</string>
     <string name="settings_rename_wallet">ウォレット名を変更</string>
     <string name="settings_about">アプリについて</string>
-    <string name="settings_version">Q-BitX Wallet v1.6.5</string>
+    <string name="settings_version">Q-BitX Wallet v1.6.6</string>
     <string name="settings_subtitle">耐量子ライトウォレット · Dilithium3 / ML-DSA-65</string>
     <string name="seed_title">あなたの言葉。あなたのウォレット。</string>
     <string name="seed_instruction">24個の単語を順番どおりに紙に書き留めてください。QBXウォレットの復元に必要です。オフラインで保管し、絶対に共有しないでください。</string>
@@ -183,4 +183,6 @@
     <string name="multiple_transactions">この支払いには複数の取引が必要です。金額を減らして送信してください。</string>
     <string name="payment_cancelled">支払いをキャンセルしました</string>
     <string name="uncertain_broadcast">配信状況が不明です。入力はロックされたままです。再試行の前にエクスプローラーで確認してください。%1$s</string>
+    <string name="address_all_wallets">すべてのウォレット</string>
+    <string name="address_balance_order">利用可能残高の多い順です。受取先アドレスをタップしてください。</string>
 </resources>

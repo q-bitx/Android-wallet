@@ -53,7 +53,7 @@
     <string name="history_fee">Tarifa</string>
     <string name="history_date">Fecha</string>
     <string name="copied">¡Copiado!</string>
-    <string name="import_from_file">Importar desde archivo (.qbx / wallet.dat)</string>
+    <string name="import_from_file">Importar desde archivo (wallet.dat)</string>
     <string name="import_or_paste">- o pegue la clave de respaldo manualmente -</string>
     <string name="backup_save_file">Guardar wallet.dat</string>
     <string name="backup_file_saved">¡Archivo guardado!</string>
@@ -113,7 +113,7 @@
     <string name="settings_new_wallet">Nueva billetera</string>
     <string name="settings_rename_wallet">Cambiar nombre de billetera</string>
     <string name="settings_about">Acerca de</string>
-    <string name="settings_version">Q-BitX Wallet v1.6.5</string>
+    <string name="settings_version">Q-BitX Wallet v1.6.6</string>
     <string name="settings_subtitle">Cartera ligera post-cuántica · Dilithium3 / ML-DSA-65</string>
     <string name="seed_title">Tus palabras. Tu billetera.</string>
     <string name="seed_instruction">Escribe estas 24 palabras en un papel, en orden. Restauran su billetera QBX. Mantenlos fuera de línea y nunca los compartas.</string>
@@ -183,4 +183,6 @@
     <string name="multiple_transactions">Este pago requiere varias transacciones. Envía un importe menor.</string>
     <string name="payment_cancelled">Pago cancelado</string>
     <string name="uncertain_broadcast">El estado del envío es incierto. Las entradas siguen bloqueadas; revisa el explorador antes de reintentar. %1$s</string>
+    <string name="address_all_wallets">Todas las billeteras</string>
+    <string name="address_balance_order">Saldo disponible de mayor a menor. Toca una dirección para recibir.</string>
 </resources>

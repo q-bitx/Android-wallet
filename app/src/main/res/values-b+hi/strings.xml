@@ -53,7 +53,7 @@
     <string name="history_fee">शुल्क</string>
     <string name="history_date">तारीख</string>
     <string name="copied">नकल की गई!</string>
-    <string name="import_from_file">फ़ाइल से आयात करें (.qbx / wallet.dat)</string>
+    <string name="import_from_file">फ़ाइल से आयात करें (wallet.dat)</string>
     <string name="import_or_paste">- या बैकअप कुंजी को मैन्युअल रूप से पेस्ट करें -</string>
     <string name="backup_save_file">wallet.dat सहेजें</string>
     <string name="backup_file_saved">फ़ाइल सहेजी गई!</string>
@@ -113,7 +113,7 @@
     <string name="settings_new_wallet">नया बटुआ</string>
     <string name="settings_rename_wallet">वॉलेट का नाम बदलें</string>
     <string name="settings_about">के बारे में</string>
-    <string name="settings_version">Q-BitX Wallet v1.6.5</string>
+    <string name="settings_version">Q-BitX Wallet v1.6.6</string>
     <string name="settings_subtitle">पोस्ट-क्वांटम लाइट वॉलेट · ​​Dilithium3 / ML-DSA-65</string>
     <string name="seed_title">आपके शब्द. आपका बटुआ.</string>
     <string name="seed_instruction">इन 24 शब्दों को क्रम से कागज पर लिखें। वे आपके QBX वॉलेट को पुनर्स्थापित करते हैं। उन्हें ऑफ़लाइन रखें और कभी साझा न करें.</string>
@@ -183,4 +183,6 @@
     <string name="multiple_transactions">इस भुगतान के लिए कई लेनदेन चाहिए। कम राशि भेजें।</string>
     <string name="payment_cancelled">भुगतान रद्द किया गया</string>
     <string name="uncertain_broadcast">प्रसारण की स्थिति स्पष्ट नहीं है। इनपुट लॉक रहेंगे; दोबारा प्रयास से पहले एक्सप्लोरर जाँचें। %1$s</string>
+    <string name="address_all_wallets">सभी वॉलेट</string>
+    <string name="address_balance_order">उपलब्ध शेष: अधिक से कम। प्राप्त करने के लिए पता चुनें।</string>
 </resources>

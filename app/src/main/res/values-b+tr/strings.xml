@@ -53,7 +53,7 @@
     <string name="history_fee">Ücret</string>
     <string name="history_date">Tarih</string>
     <string name="copied">Kopyalandı!</string>
-    <string name="import_from_file">Dosyadan içe aktar (.qbx / wallet.dat)</string>
+    <string name="import_from_file">Dosyadan içe aktar (wallet.dat)</string>
     <string name="import_or_paste">— veya yedekleme anahtarını manuel olarak yapıştırın —</string>
     <string name="backup_save_file">wallet.dat\'yi kaydedin</string>
     <string name="backup_file_saved">Dosya kaydedildi!</string>
@@ -113,7 +113,7 @@
     <string name="settings_new_wallet">Yeni Cüzdan</string>
     <string name="settings_rename_wallet">Cüzdanı Yeniden Adlandır</string>
     <string name="settings_about">Hakkında</string>
-    <string name="settings_version">Q-BitX Wallet v1.6.5</string>
+    <string name="settings_version">Q-BitX Wallet v1.6.6</string>
     <string name="settings_subtitle">Kuantum Sonrası Işık Cüzdanı · Dilithium3 / ML-DSA-65</string>
     <string name="seed_title">Senin sözlerin. Cüzdanın.</string>
     <string name="seed_instruction">Bu 24 kelimeyi sırayla kağıda yazın. QBX cüzdanınızı geri yüklerler. Bunları çevrimdışı tutun ve asla paylaşmayın.</string>
@@ -183,4 +183,6 @@
     <string name="multiple_transactions">Bu ödeme birden fazla işlem gerektiriyor. Daha küçük bir tutar gönderin.</string>
     <string name="payment_cancelled">Ödeme iptal edildi</string>
     <string name="uncertain_broadcast">Yayın durumu belirsiz. Girdiler kilitli kalır; yeniden denemeden önce gezgini kontrol edin. %1$s</string>
+    <string name="address_all_wallets">Tüm cüzdanlar</string>
+    <string name="address_balance_order">Kullanılabilir bakiye: büyükten küçüğe. Almak için adrese dokunun.</string>
 </resources>

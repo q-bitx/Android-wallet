@@ -53,7 +53,7 @@
     <string name="history_fee">Phí</string>
     <string name="history_date">Ngày</string>
     <string name="copied">Đã sao chép!</string>
-    <string name="import_from_file">Nhập từ tệp (.qbx / wallet.dat)</string>
+    <string name="import_from_file">Nhập từ tệp (wallet.dat)</string>
     <string name="import_or_paste">— hoặc dán khóa dự phòng theo cách thủ công —</string>
     <string name="backup_save_file">Lưu wallet.dat</string>
     <string name="backup_file_saved">Đã lưu tệp!</string>
@@ -113,7 +113,7 @@
     <string name="settings_new_wallet">Ví mới</string>
     <string name="settings_rename_wallet">Đổi tên ví</string>
     <string name="settings_about">Về</string>
-    <string name="settings_version">Q-BitX Wallet v1.6.5</string>
+    <string name="settings_version">Q-BitX Wallet v1.6.6</string>
     <string name="settings_subtitle">Ví ánh sáng hậu lượng tử · Dilithium3 / ML-DSA-65</string>
     <string name="seed_title">Lời nói của bạn. Ví của bạn.</string>
     <string name="seed_instruction">Viết 24 từ này ra giấy theo thứ tự. Họ khôi phục ví QBX của bạn. Giữ chúng ngoại tuyến và không bao giờ chia sẻ chúng.</string>
@@ -183,4 +183,6 @@
     <string name="multiple_transactions">Khoản thanh toán này cần nhiều giao dịch. Hãy gửi số tiền nhỏ hơn.</string>
     <string name="payment_cancelled">Đã hủy thanh toán</string>
     <string name="uncertain_broadcast">Trạng thái phát chưa rõ. Các đầu vào vẫn bị khóa; kiểm tra trình khám phá trước khi thử lại. %1$s</string>
+    <string name="address_all_wallets">Tất cả ví</string>
+    <string name="address_balance_order">Số dư khả dụng: từ cao đến thấp. Nhấn địa chỉ để nhận.</string>
 </resources>

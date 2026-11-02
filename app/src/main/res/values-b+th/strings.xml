@@ -53,7 +53,7 @@
     <string name="history_fee">ค่าธรรมเนียม</string>
     <string name="history_date">วันที่</string>
     <string name="copied">คัดลอกแล้ว!</string>
-    <string name="import_from_file">นำเข้าจากไฟล์ (.qbx / wallet.dat)</string>
+    <string name="import_from_file">นำเข้าจากไฟล์ (wallet.dat)</string>
     <string name="import_or_paste">— หรือวางคีย์สำรองด้วยตนเอง —</string>
     <string name="backup_save_file">บันทึก wallet.dat</string>
     <string name="backup_file_saved">บันทึกไฟล์แล้ว!</string>
@@ -113,7 +113,7 @@
     <string name="settings_new_wallet">บัญชีใหม่</string>
     <string name="settings_rename_wallet">เปลี่ยนชื่อกระเป๋าเงิน</string>
     <string name="settings_about">เกี่ยวกับ</string>
-    <string name="settings_version">Q-BitX Wallet v1.6.5</string>
+    <string name="settings_version">Q-BitX Wallet v1.6.6</string>
     <string name="settings_subtitle">กระเป๋าเงินแบบเบาต้านทานควอนตัม · Dilithium3 / ML-DSA-65</string>
     <string name="seed_title">คำของคุณ กระเป๋าเงินของคุณ</string>
     <string name="seed_instruction">จดคำทั้ง 24 คำลงกระดาษตามลำดับ คำเหล่านี้ใช้กู้คืนกระเป๋าเงิน QBX เก็บไว้แบบออฟไลน์และห้ามเปิดเผยให้ใคร</string>
@@ -183,4 +183,6 @@
     <string name="multiple_transactions">การชำระเงินนี้ต้องใช้หลายธุรกรรม โปรดส่งจำนวนที่น้อยลง</string>
     <string name="payment_cancelled">ยกเลิกการชำระเงินแล้ว</string>
     <string name="uncertain_broadcast">สถานะการเผยแพร่ไม่แน่นอน อินพุตยังถูกล็อกอยู่ โปรดตรวจสอบในเอ็กซ์พลอเรอร์ก่อนลองใหม่ %1$s</string>
+    <string name="address_all_wallets">กระเป๋าเงินทั้งหมด</string>
+    <string name="address_balance_order">ยอดคงเหลือที่ใช้ได้จากมากไปน้อย แตะที่อยู่เพื่อรับ</string>
 </resources>

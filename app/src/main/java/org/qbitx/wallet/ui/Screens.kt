@@ -201,7 +201,8 @@ fun WalletScreen(
     onNavigateToHistory: () -> Unit,
     onRefresh: () -> Unit,
     onSwitchWallet: (Int) -> Unit,
-    onAddWallet: (String) -> Unit
+    onAddWallet: (String) -> Unit,
+    onNavigateToAddresses: () -> Unit = onNavigateToReceive
 ) {
     Column(
         modifier = Modifier
@@ -586,7 +587,7 @@ fun WalletScreen(
             }
             Spacer(Modifier.height(16.dp))
 
-            if(entries.size>2) TextButton(onClick=onNavigateToReceive) { Text(stringResource(R.string.all_addresses,entries.size)) }
+            if(entries.isNotEmpty()) TextButton(onClick=onNavigateToAddresses) { Text(stringResource(R.string.all_addresses,entries.size)) }
 
             // Connection status
             Row(
@@ -1210,6 +1211,56 @@ fun ReceiveScreen(
             fontSize = 12.sp,
             color = QBXOnSurfaceDim
         )
+    }
+}
+
+/** Unknown balances sort last; stable address order breaks ties. No wallet-total duplication. */
+fun sortedReceiveAddresses(addresses: List<String>, balances: Map<String, Double>): List<String> =
+    addresses.distinct().sortedWith(compareByDescending<String> { balances[it] != null }
+        .thenByDescending { balances[it] ?: 0.0 })
+
+@Composable
+fun AddressListScreen(state: WalletUiState, onRefresh: () -> Unit, onReceive: (String) -> Unit, onBack: () -> Unit) {
+    var walletId by remember { mutableStateOf<Int?>(state.wallets.firstOrNull { it.address == state.address }?.id) }
+    var menu by remember { mutableStateOf(false) }
+    val wallets = if (walletId == null) state.wallets else state.wallets.filter { it.id == walletId }
+    val entries = sortedReceiveAddresses(walletReceiveAddresses(wallets), state.addressBalances)
+    Column(Modifier.fillMaxSize().background(QBXBackground).statusBarsPadding().navigationBarsPadding()) {
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            IconButton(onClick = onBack) { Icon(Icons.Default.ArrowBack, stringResource(R.string.send_back), tint = QBXOnSurface) }
+            Text(stringResource(R.string.all_addresses, entries.size), color = QBXOnSurface, modifier = Modifier.weight(1f))
+            IconButton(onClick = onRefresh, enabled = !state.addressBalancesLoading) {
+                Icon(Icons.Default.Refresh, stringResource(R.string.btn_refresh), tint = QBXMint)
+            }
+        }
+        Box(Modifier.padding(horizontal = 16.dp)) {
+            OutlinedButton(onClick = { menu = true }, modifier = Modifier.fillMaxWidth()) {
+                Text(state.wallets.firstOrNull { it.id == walletId }?.name ?: stringResource(R.string.address_all_wallets))
+                Icon(Icons.Default.ArrowDropDown, null)
+            }
+            DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
+                DropdownMenuItem(text = { Text(stringResource(R.string.address_all_wallets)) }, onClick = { walletId = null; menu = false })
+                state.wallets.forEach { wallet ->
+                    DropdownMenuItem(text = { Text(wallet.name) }, onClick = { walletId = wallet.id; menu = false })
+                }
+            }
+        }
+        Text(stringResource(R.string.address_balance_order), color = QBXOnSurfaceDim, fontSize = 12.sp, modifier = Modifier.padding(16.dp))
+        if (state.addressBalancesLoading) LinearProgressIndicator(modifier = Modifier.fillMaxWidth(), color = QBXMint)
+        state.addressBalancesError?.let { Text(it, color = QBXRed, modifier = Modifier.padding(16.dp)) }
+        LazyColumn(Modifier.weight(1f), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            items(entries, key = { it }) { address ->
+                val owner = state.wallets.firstOrNull { it.address == address || it.witnessAddress == address }
+                Column(Modifier.fillMaxWidth().solidCard().clickable { onReceive(address) }.padding(16.dp)) {
+                    Text(owner?.name.orEmpty(), color = QBXOnSurface, fontWeight = FontWeight.SemiBold)
+                    val number = walletReceiveAddresses(listOfNotNull(owner)).indexOf(address) + 1
+                    Text(stringResource(R.string.numbered_address, number,
+                        stringResource(if (address.startsWith("dil1")) R.string.address_witness else R.string.address_legacy)), color = QBXOnSurfaceDim, fontSize = 12.sp)
+                    Text(address, color = QBXOnSurface, fontFamily = FontFamily.Monospace, fontSize = 12.sp)
+                    Text(state.addressBalances[address]?.let { String.format(Locale.ROOT, "%.8f QBX", it) } ?: "— QBX", color = QBXMint)
+                }
+            }
+        }
     }
 }
 
@@ -2008,10 +2059,10 @@ fun SettingsScreen(
                     var showAddWallet by remember { mutableStateOf(false) }
                     var addWalletName by remember { mutableStateOf("") }
 
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
                         OutlinedButton(
                             onClick = { showRename = true; renameText = state.activeWalletName },
-                            modifier = Modifier.weight(1f).height(44.dp),
+                            modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp),
                             shape = RoundedCornerShape(8.dp)
                         ) {
                             Icon(Icons.Default.Edit, null, modifier = Modifier.size(16.dp), tint = QBXOnSurface)
@@ -2021,7 +2072,7 @@ fun SettingsScreen(
                         if (state.wallets.size > 1) {
                             OutlinedButton(
                                 onClick = { onDeleteActiveWallet() },
-                                modifier = Modifier.weight(1f).height(44.dp),
+                                modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp),
                                 shape = RoundedCornerShape(8.dp),
                                 colors = ButtonDefaults.outlinedButtonColors(contentColor = QBXRed),
                                 border = androidx.compose.foundation.BorderStroke(1.dp, QBXRed.copy(alpha = 0.5f))
@@ -2037,7 +2088,7 @@ fun SettingsScreen(
 
                     Button(
                         onClick = { showAddWallet = true },
-                        modifier = Modifier.fillMaxWidth().height(44.dp),
+                        modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp),
                         shape = RoundedCornerShape(8.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = QBXMint, contentColor = QBXInk)
                     ) {

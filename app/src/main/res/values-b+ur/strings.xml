@@ -53,7 +53,7 @@
     <string name="history_fee">فیس</string>
     <string name="history_date">تاریخ</string>
     <string name="copied">نقل ہو گیا!</string>
-    <string name="import_from_file">فائل سے درآمد کریں (.qbx / wallet.dat)</string>
+    <string name="import_from_file">فائل سے درآمد کریں (wallet.dat)</string>
     <string name="import_or_paste">— یا بیک اپ کلید دستی طور پر چسپاں کریں —</string>
     <string name="backup_save_file">wallet.dat محفوظ کریں</string>
     <string name="backup_file_saved">فائل محفوظ ہو گئی!</string>
@@ -113,7 +113,7 @@
     <string name="settings_new_wallet">نیا اکاؤنٹ</string>
     <string name="settings_rename_wallet">والیٹ کا نام بدلیں</string>
     <string name="settings_about">تعارف</string>
-    <string name="settings_version">Q-BitX Wallet v1.6.5</string>
+    <string name="settings_version">Q-BitX Wallet v1.6.6</string>
     <string name="settings_subtitle">پوسٹ کوانٹم لائٹ والیٹ · Dilithium3 / ML-DSA-65</string>
     <string name="seed_title">آپ کے الفاظ۔ آپ کا والیٹ۔</string>
     <string name="seed_instruction">یہ 24 الفاظ ترتیب سے کاغذ پر لکھیں۔ ان سے آپ کا QBX والیٹ بحال ہوتا ہے۔ انہیں آف لائن محفوظ رکھیں اور کبھی کسی کو نہ دیں۔</string>
@@ -183,4 +183,6 @@
     <string name="multiple_transactions">اس ادائیگی کے لیے کئی لین دین درکار ہیں۔ کم رقم بھیجیں۔</string>
     <string name="payment_cancelled">ادائیگی منسوخ</string>
     <string name="uncertain_broadcast">نشر کی حالت غیر یقینی ہے۔ اِن پٹس مقفل رہیں گے؛ دوبارہ کوشش سے پہلے ایکسپلورر دیکھیں۔ %1$s</string>
+    <string name="address_all_wallets">تمام والیٹس</string>
+    <string name="address_balance_order">دستیاب بیلنس: زیادہ سے کم۔ وصول کرنے کے لیے پتہ دبائیں۔</string>
 </resources>

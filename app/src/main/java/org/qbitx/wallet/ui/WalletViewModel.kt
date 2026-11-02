@@ -30,6 +30,9 @@ data class WalletUiState(
     val pendingSeed: String? = null,
     val address: String = "",
     val witnessAddress: String = "",
+    val addressBalances: Map<String, Double> = emptyMap(),
+    val addressBalancesLoading: Boolean = false,
+    val addressBalancesError: String? = null,
     val balance: Double = 0.0,
     val unconfirmedBalance: Double = 0.0,
     val immatureBalance: Double = 0.0,
@@ -229,8 +232,41 @@ class WalletViewModel(application: Application) : AndroidViewModel(application) 
         }
     }
 
+    private var addressBalanceJob: Job? = null
+
+    fun cancelAddressBalances() {
+        addressBalanceJob?.cancel()
+        addressBalanceJob = null
+        _uiState.value = _uiState.value.copy(addressBalancesLoading = false)
+    }
+
+    /** Explicit, read-only scans. Serial scans avoid concurrent scantxoutset on the node. */
+    fun refreshAddressBalances() {
+        if (addressBalanceJob?.isActive == true) return
+        val snapshot = walletReceiveAddresses(_uiState.value.wallets)
+        val url = _uiState.value.rpcUrl
+        addressBalanceJob = viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(addressBalancesLoading = true,
+                addressBalances = emptyMap(), addressBalancesError = null)
+            try {
+                refreshJob?.join()
+                for (address in snapshot) {
+                    val scan = rpcClient.scanTxOutSet(address)
+                    if (walletReceiveAddresses(_uiState.value.wallets) != snapshot || _uiState.value.rpcUrl != url) return@launch
+                    _uiState.value = _uiState.value.copy(addressBalances =
+                        _uiState.value.addressBalances + (address to (scan.totalAmount - scan.immatureAmount)))
+                }
+            } catch (e: kotlinx.coroutines.CancellationException) { throw e
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(addressBalancesError = e.message ?: "RPC error")
+            } finally {
+                _uiState.value = _uiState.value.copy(addressBalancesLoading = false)
+            }
+        }
+    }
+
     fun refreshBalance() {
-        if (isRefreshing) return
+        if (isRefreshing || addressBalanceJob?.isActive == true) return
         val generation=++refreshGeneration
         refreshJob = viewModelScope.launch {
             isRefreshing = true

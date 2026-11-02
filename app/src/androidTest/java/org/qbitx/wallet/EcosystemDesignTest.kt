@@ -70,7 +70,7 @@ class EcosystemDesignTest {
                 onRenameWallet={},onDeleteActiveWallet={},onSwitchWallet={},onAddWallet={},onImportWallet={})
         } }
         compose.onNodeWithText("Import Wallet").performScrollTo().performClick()
-        compose.onNodeWithText("Import from file (.qbx / wallet.dat)").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithText("Import from file (wallet.dat)").performScrollTo().assertIsDisplayed()
     }
     @Test fun receiveShowsNativeAddressAndQrInEcosystemStyle() {
         compose.setContent { QBitXWalletTheme { ReceiveScreen(legacy,native,{}) } }

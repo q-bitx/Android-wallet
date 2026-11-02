@@ -65,6 +65,7 @@ class MainActivity : FragmentActivity() {
                 val viewModel: WalletViewModel = viewModel()
                 val state by viewModel.uiState.collectAsState()
                 var currentScreen by remember { mutableStateOf("home") }
+                var selectedReceiveAddress by remember { mutableStateOf("") }
                 if (state.pendingSendSummary != null) {
                     androidx.compose.material3.AlertDialog(
                         onDismissRequest = { viewModel.approveSend(false) },
@@ -101,6 +102,7 @@ class MainActivity : FragmentActivity() {
                             onImportWallet = { backup -> viewModel.importWallet(backup) },
                             onNavigateToSend = { currentScreen = "send" },
                             onNavigateToReceive = { currentScreen = "receive" },
+                            onNavigateToAddresses = { currentScreen = "addresses"; viewModel.refreshAddressBalances() },
                             onNavigateToSettings = { currentScreen = "settings" },
                             onNavigateToHistory = { currentScreen = "history" },
                             onRefresh = { viewModel.refreshBalance() },
@@ -115,9 +117,22 @@ class MainActivity : FragmentActivity() {
                         "receive" -> ReceiveScreen(
                             address = state.address,
                             witnessAddress = state.witnessAddress,
-                            addresses = walletReceiveAddresses(state.wallets),
+                            addresses = walletReceiveAddresses(state.wallets.filter { it.address == state.address }),
                             onBack = { currentScreen = "home" }
                         )
+                        "addresses" -> {
+                            androidx.compose.runtime.DisposableEffect(Unit) {
+                                onDispose { viewModel.cancelAddressBalances() }
+                            }
+                            AddressListScreen(
+                            state = state,
+                            onRefresh = { viewModel.refreshAddressBalances() },
+                            onReceive = { selectedReceiveAddress = it; currentScreen = "receive-address" },
+                            onBack = { currentScreen = "home" }
+                        )
+                        }
+                        "receive-address" -> ReceiveScreen(address = selectedReceiveAddress,
+                            addresses = listOf(selectedReceiveAddress), onBack = { currentScreen = "addresses" })
                         "history" -> HistoryScreen(
                             state = state,
                             onBack = { currentScreen = "home" }

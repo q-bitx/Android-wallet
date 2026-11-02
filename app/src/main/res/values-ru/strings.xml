@@ -53,7 +53,7 @@
     <string name="history_fee">Платеж</string>
     <string name="history_date">Дата</string>
     <string name="copied">Скопировано!</string>
-    <string name="import_from_file">Импорт из файла (.qbx / wallet.dat)</string>
+    <string name="import_from_file">Импорт из файла (wallet.dat)</string>
     <string name="import_or_paste">— или вставьте резервный ключ вручную —</string>
     <string name="backup_save_file">Сохранить wallet.dat</string>
     <string name="backup_file_saved">Файл сохранен!</string>
@@ -113,7 +113,7 @@
     <string name="settings_new_wallet">Новый кошелек</string>
     <string name="settings_rename_wallet">Переименовать кошелек</string>
     <string name="settings_about">О</string>
-    <string name="settings_version">Q-BitX Wallet v1.6.5</string>
+    <string name="settings_version">Q-BitX Wallet v1.6.6</string>
     <string name="settings_subtitle">Кошелек Post-Quantum Light · Dilithium3 / ML-DSA-65</string>
     <string name="seed_title">Ваши слова. Ваш кошелёк.</string>
     <string name="seed_instruction">Запишите эти 24 слова на бумаге в правильном порядке. Они восстанавливают ваш кошелёк QBX. Храните слова офлайн и никому не передавайте.</string>
@@ -183,4 +183,6 @@
     <string name="multiple_transactions">Для этого платежа нужно несколько транзакций. Отправьте меньшую сумму.</string>
     <string name="payment_cancelled">Платёж отменён</string>
     <string name="uncertain_broadcast">Статус отправки неизвестен. Входы остаются заблокированными; проверьте обозреватель перед повтором. %1$s</string>
+    <string name="address_all_wallets">Все кошельки</string>
+    <string name="address_balance_order">Доступный баланс: от большего к меньшему. Нажмите адрес для получения.</string>
 </resources>

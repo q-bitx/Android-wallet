@@ -53,7 +53,7 @@
     <string name="history_fee">Frais</string>
     <string name="history_date">Date</string>
     <string name="copied">Copié!</string>
-    <string name="import_from_file">Importer depuis un fichier (.qbx / wallet.dat)</string>
+    <string name="import_from_file">Importer depuis un fichier (wallet.dat)</string>
     <string name="import_or_paste">- ou collez la clé de sauvegarde manuellement -</string>
     <string name="backup_save_file">Enregistrer wallet.dat</string>
     <string name="backup_file_saved">Fichier enregistré !</string>
@@ -113,7 +113,7 @@
     <string name="settings_new_wallet">Nouveau portefeuille</string>
     <string name="settings_rename_wallet">Renommer le portefeuille</string>
     <string name="settings_about">À propos</string>
-    <string name="settings_version">Q-BitX Wallet v1.6.5</string>
+    <string name="settings_version">Q-BitX Wallet v1.6.6</string>
     <string name="settings_subtitle">Portefeuille de lumière post-quantique · Dilithium3 / ML-DSA-65</string>
     <string name="seed_title">Vos mots. Votre portefeuille.</string>
     <string name="seed_instruction">Écrivez ces 24 mots sur papier, dans l\'ordre. Ils restaurent votre portefeuille QBX. Gardez-les hors ligne et ne les partagez jamais.</string>
@@ -183,4 +183,6 @@
     <string name="multiple_transactions">Ce paiement nécessite plusieurs transactions. Envoyez un montant plus faible.</string>
     <string name="payment_cancelled">Paiement annulé</string>
     <string name="uncertain_broadcast">État de diffusion incertain. Les entrées restent verrouillées ; vérifiez l’explorateur avant de réessayer. %1$s</string>
+    <string name="address_all_wallets">Tous les portefeuilles</string>
+    <string name="address_balance_order">Solde disponible décroissant. Touchez une adresse pour recevoir.</string>
 </resources>
