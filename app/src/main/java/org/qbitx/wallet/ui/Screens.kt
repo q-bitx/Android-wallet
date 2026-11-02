@@ -45,6 +45,7 @@ import androidx.biometric.BiometricManager
 import androidx.biometric.BiometricPrompt
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.FragmentActivity
@@ -319,7 +320,7 @@ fun WalletScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .solidCard()
-                    .clickable { showWalletMenu = true }
+                    .testTag("wallet_selector").clickable { showWalletMenu = true }
                     .padding(horizontal = 16.dp, vertical = 12.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -345,6 +346,7 @@ fun WalletScreen(
                 DropdownMenu(expanded = showWalletMenu, onDismissRequest = { showWalletMenu = false }) {
                     state.wallets.forEach { wallet ->
                         DropdownMenuItem(
+                            modifier = Modifier.testTag("wallet_option_${wallet.id}"),
                             text = {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     if (wallet.address == state.address) {
@@ -537,7 +539,7 @@ fun WalletScreen(
                     modifier = Modifier
                         .weight(1f)
                         .solidCard()
-                        .clickable { onNavigateToReceive() }
+                        .testTag("receive_action").clickable { onNavigateToReceive() }
                         .padding(vertical = 12.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
@@ -1078,18 +1080,38 @@ fun SendScreen(
 // ==================== RECEIVE SCREEN ====================
 
 @OptIn(ExperimentalMaterial3Api::class)
+/** Shared by the ordinary Receive action and a specific address opened from the list. */
+@Composable
+fun WalletReceiveScreen(state: WalletUiState, onBack: () -> Unit, requestedAddress: String? = null) {
+    val owner = state.wallets.firstOrNull {
+        if (requestedAddress == null) it.address == state.address
+        else it.address == requestedAddress || it.witnessAddress == requestedAddress
+    }
+    val entries = if (requestedAddress != null && owner != null) listOf(requestedAddress)
+        else walletReceiveAddresses(listOfNotNull(owner))
+    val allAddresses = walletReceiveAddresses(state.wallets)
+    key(owner?.id, requestedAddress) {
+        ReceiveScreen(address = owner?.address.orEmpty(), witnessAddress = owner?.witnessAddress.orEmpty(),
+            addresses = entries, walletName = owner?.name.orEmpty(),
+            addressNumbers = entries.map { allAddresses.indexOf(it) + 1 }, onBack = onBack)
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ReceiveScreen(
     address: String,
     witnessAddress: String = "",
     onBack: () -> Unit,
-    addresses: List<String> = emptyList()
+    addresses: List<String> = emptyList(),
+    walletName: String = "",
+    addressNumbers: List<Int> = emptyList()
 ) {
     val clipboardManager = LocalClipboardManager.current
-    var copied by remember { mutableStateOf(false) }
     val entries=addresses.ifEmpty { listOf(witnessAddress,address).filter { it.isNotBlank() }.distinct() }
     var selected by remember(entries) { mutableStateOf(0) }
     val shownAddress=entries.getOrElse(selected) { "" }
+    var copied by remember(shownAddress) { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
@@ -1113,6 +1135,8 @@ fun ReceiveScreen(
             Text(stringResource(R.string.receive_title), fontSize = 20.sp, fontWeight = FontWeight.SemiBold, color = QBXOnSurface)
         }
 
+        if (walletName.isNotBlank()) Text(walletName, color = QBXMint, fontWeight = FontWeight.SemiBold,
+            modifier = Modifier.padding(horizontal = 20.dp).testTag("receive_wallet_name"))
         Spacer(Modifier.height(24.dp))
 
         // QR code area
@@ -1131,7 +1155,7 @@ fun ReceiveScreen(
                     bitmap = it.asImageBitmap(),
                     contentDescription = "QR Code",
                     modifier = Modifier
-                        .size(200.dp)
+                        .testTag("receive_qr").size(200.dp)
                         .clip(RoundedCornerShape(8.dp))
                         .background(androidx.compose.ui.graphics.Color.White)
                         .padding(12.dp)
@@ -1154,6 +1178,7 @@ fun ReceiveScreen(
             Spacer(Modifier.height(8.dp))
             Text(
                 shownAddress,
+                modifier = Modifier.testTag("receive_address"),
                 fontSize = 12.sp,
                 fontFamily = FontFamily.Monospace,
                 color = QBXOnSurface,
@@ -1165,11 +1190,11 @@ fun ReceiveScreen(
         var addressMenu by remember { mutableStateOf(false) }
         Box {
             TextButton(onClick={addressMenu=true}) {
-                Text(stringResource(R.string.numbered_address,selected+1,stringResource(if(shownAddress.startsWith("dil1")) R.string.address_witness else R.string.address_legacy)))
+                Text(stringResource(R.string.numbered_address,addressNumbers.getOrElse(selected) { selected+1 },stringResource(if(shownAddress.startsWith("dil1")) R.string.address_witness else R.string.address_legacy)))
             }
             DropdownMenu(expanded=addressMenu,onDismissRequest={addressMenu=false}) {
                 entries.forEachIndexed { index, value ->
-                    DropdownMenuItem(text={Text(stringResource(R.string.numbered_address,index+1,stringResource(if(value.startsWith("dil1")) R.string.address_witness else R.string.address_legacy)))},
+                    DropdownMenuItem(text={Text(stringResource(R.string.numbered_address,addressNumbers.getOrElse(index) { index+1 },stringResource(if(value.startsWith("dil1")) R.string.address_witness else R.string.address_legacy)))},
                         onClick={selected=index;copied=false;addressMenu=false})
                 }
             }
@@ -1177,6 +1202,7 @@ fun ReceiveScreen(
 
         // Copy button
         Button(
+            enabled = shownAddress.isNotBlank(),
             onClick = {
                 clipboardManager.setText(AnnotatedString(shownAddress))
                 copied = true

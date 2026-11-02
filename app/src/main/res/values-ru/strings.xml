@@ -113,7 +113,7 @@
     <string name="settings_new_wallet">Новый кошелек</string>
     <string name="settings_rename_wallet">Переименовать кошелек</string>
     <string name="settings_about">О</string>
-    <string name="settings_version">Q-BitX Wallet v1.6.6</string>
+    <string name="settings_version">Q-BitX Wallet v1.6.7</string>
     <string name="settings_subtitle">Кошелек Post-Quantum Light · Dilithium3 / ML-DSA-65</string>
     <string name="seed_title">Ваши слова. Ваш кошелёк.</string>
     <string name="seed_instruction">Запишите эти 24 слова на бумаге в правильном порядке. Они восстанавливают ваш кошелёк QBX. Храните слова офлайн и никому не передавайте.</string>

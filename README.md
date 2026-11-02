@@ -21,7 +21,23 @@ See SECURITY_REVIEW.md, DESIGN_SYSTEM.md and the separate delivered audit report
 - Single-transaction payments, maximum fee 0.1 QBX. Smaller payments may be needed for
   wallets with many inputs. An ambiguous broadcast timeout must not be retried blindly.
 
-## Download 1.6.5
+## Download 1.6.7
+
+[Download APK](https://github.com/q-bitx/Android-wallet/releases/download/v1.6.7-receive-account-preview/QBitX-Android-1.6.7-receive-account-preview.apk)
+
+[Release and verification report](https://github.com/q-bitx/Android-wallet/releases/tag/v1.6.7-receive-account-preview)
+
+Receive explicitly identifies the selected account and uses the global address number.
+QR codes and copied addresses are regression-tested across three actual accounts.
+
+## Previous 1.6.6
+
+https://github.com/q-bitx/Android-wallet/releases/tag/v1.6.6-address-list-preview
+
+Adds a separate address list with wallet filtering and descending balance order,
+wallet.dat-only import labels, and full-width wallet management buttons.
+
+## Previous 1.6.5
 
 https://github.com/q-bitx/Android-wallet/releases/tag/v1.6.5-asian-languages-preview
 

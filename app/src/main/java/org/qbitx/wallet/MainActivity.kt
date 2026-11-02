@@ -114,12 +114,7 @@ class MainActivity : FragmentActivity() {
                             onSend = { addr, amt, fee -> viewModel.sendQBX(addr, amt, fee) },
                             onBack = { currentScreen = "home" }
                         )
-                        "receive" -> ReceiveScreen(
-                            address = state.address,
-                            witnessAddress = state.witnessAddress,
-                            addresses = walletReceiveAddresses(state.wallets.filter { it.address == state.address }),
-                            onBack = { currentScreen = "home" }
-                        )
+                        "receive" -> WalletReceiveScreen(state = state, onBack = { currentScreen = "home" })
                         "addresses" -> {
                             androidx.compose.runtime.DisposableEffect(Unit) {
                                 onDispose { viewModel.cancelAddressBalances() }
@@ -131,8 +126,7 @@ class MainActivity : FragmentActivity() {
                             onBack = { currentScreen = "home" }
                         )
                         }
-                        "receive-address" -> ReceiveScreen(address = selectedReceiveAddress,
-                            addresses = listOf(selectedReceiveAddress), onBack = { currentScreen = "addresses" })
+                        "receive-address" -> WalletReceiveScreen(state = state, requestedAddress = selectedReceiveAddress, onBack = { currentScreen = "addresses" })
                         "history" -> HistoryScreen(
                             state = state,
                             onBack = { currentScreen = "home" }
