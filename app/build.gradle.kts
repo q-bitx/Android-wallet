@@ -21,8 +21,8 @@ android {
         applicationId = "org.qbitx.wallet.preview"
         minSdk = 26
         targetSdk = 36
-        versionCode = 26
-        versionName = "1.6.0-seed-preview"
+        versionCode = 27
+        versionName = "1.6.1-audit-preview"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         ndk {
@@ -98,6 +98,7 @@ dependencies {
     // Compose BOM
     val composeBom = platform("androidx.compose:compose-bom:2024.06.00")
     implementation(composeBom)
+    androidTestImplementation(composeBom)
 
     // Core
     implementation("androidx.core:core-ktx:1.12.0")
@@ -139,6 +140,8 @@ dependencies {
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test:runner:1.5.2")
+    androidTestImplementation("androidx.compose.ui:ui-test-junit4")
+    androidTestImplementation("androidx.test:rules:1.5.0")
     testImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")
 
     // Debug

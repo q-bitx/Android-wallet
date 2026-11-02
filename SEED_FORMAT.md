@@ -20,6 +20,12 @@ No BIP39 passphrase, additional account, path selector or seed-based discovery i
 Imported legacy raw-key backups have no recoverable seed. Existing random keys must never
 be represented as recoverable by an unrelated mnemonic.
 
+Since 1.6.1, a seed-file backup is JSON with `format: "qbx-seed-backup"`, numeric `version: 1`,
+`derivation: "qbx-pqhd-v1"` and the `mnemonic` string. This changes the backup container,
+not key derivation. Plain 24-word imports continue to select v1. Unsupported container or
+derivation versions fail closed. The canonical English dictionary SHA256 is
+`2f5eed53a4727b4bf8880d8f3f199efc90e58503646d9ff8eff3a2ed3b24dbda`.
+
 Record the 24 words AND the format identifier `qbx-pqhd-v1`. An ordinary Bitcoin wallet
 will derive different keys. Backups of old raw-key wallets remain in their original format.
 

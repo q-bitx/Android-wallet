@@ -82,7 +82,9 @@ class WalletViewModel(application: Application) : AndroidViewModel(application) 
                 keyManager.saveRpcUrl("https://rpc.qbitx.org/")
             }
         }
-        checkWallet()
+        try { checkWallet() } catch (_: Exception) {
+            _uiState.value = _uiState.value.copy(error = "Wallet integrity check failed. Restore your backup before using this wallet.")
+        }
         autoConnect()
     }
 
@@ -670,14 +672,16 @@ class WalletViewModel(application: Application) : AndroidViewModel(application) 
                         sendProgressTotal = totalBatches,
                         sendProgressPhase = "Sende"
                     )
-                    val txid = rpcClient.sendRawTransaction(batch.signedHex)
+                    val spentOutpoints = plannedBatches[index].inputs.map { "${it.txid}:${it.vout}" }
+                    keyManager.reserveBroadcast(spentOutpoints,batch.signedHex,activeWalletId)
+                    val txid = try { rpcClient.sendRawTransaction(batch.signedHex) } catch (e: Exception) {
+                        throw Exception("Broadcast status uncertain. Inputs remain locked; check the explorer before retrying. ${e.message}")
+                    }
                     sentTxids.add(txid)
                     totalActualFeeSat += batch.actualFeeSat
 
                     // Lock the inputs we just spent so the next send (even on a
                     // restart) won't reuse them while they sit in the mempool.
-                    val spentOutpoints = plannedBatches[index].inputs
-                        .map { "${it.txid}:${it.vout}" }
                     keyManager.addPendingSpentOutpoints(spentOutpoints, activeWalletId)
 
                     val partAmountQbx = batch.sendAmtSat / 1e8
@@ -685,6 +689,7 @@ class WalletViewModel(application: Application) : AndroidViewModel(application) 
                     val partFeeStr = "%.8f QBX".format(partFeeQbx)
 
                     keyManager.addTxRecord(txid, toAddress, partAmountQbx, partFeeStr)
+                    keyManager.acknowledgeBroadcast(spentOutpoints,activeWalletId)
 
                     pendingRecords.add(
                         TxRecord(
@@ -746,8 +751,7 @@ class WalletViewModel(application: Application) : AndroidViewModel(application) 
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, error = null)
             try {
-                if (backup.contains(":")) keyManager.importWallet(backup, name)
-                else keyManager.restoreSeed(backup, name)
+                keyManager.importRecovery(backup, name)
                 checkWallet()
                 _uiState.value = _uiState.value.copy(isLoading = false)
                 refreshBalance()

@@ -59,14 +59,15 @@ import androidx.activity.result.contract.ActivityResultContracts
 // ==================== CARD STYLE ====================
 
 val BalanceGradient = Brush.linearGradient(
-    colors = listOf(QBXPurple, QBXBlueDark),
+    colors = listOf(QBXCardDark, QBXBlueDark),
     start = Offset(0f, 0f),
     end = Offset(800f, 400f)
 )
 
 private fun Modifier.solidCard(): Modifier = this
-    .clip(RoundedCornerShape(16.dp))
+    .clip(RoundedCornerShape(8.dp))
     .background(QBXSurface)
+    .border(1.dp, QBXDivider, RoundedCornerShape(8.dp))
 
 // ==================== LOCK SCREEN ====================
 
@@ -109,7 +110,7 @@ fun LockScreen(onPinVerify: (String) -> Boolean, onUnlocked: () -> Unit) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Icon(Icons.Default.Lock, null, tint = QBXPurple, modifier = Modifier.size(56.dp))
+        Icon(Icons.Default.Lock, null, tint = QBXMint, modifier = Modifier.size(56.dp))
         Spacer(Modifier.height(16.dp))
         Text(stringResource(R.string.lock_title), fontSize = 22.sp, fontWeight = FontWeight.Bold, color = QBXOnSurface)
         Spacer(Modifier.height(8.dp))
@@ -122,7 +123,7 @@ fun LockScreen(onPinVerify: (String) -> Boolean, onUnlocked: () -> Unit) {
                     modifier = Modifier
                         .size(16.dp)
                         .clip(CircleShape)
-                        .background(if (i < pin.length) QBXPurple else QBXDivider)
+                        .background(if (i < pin.length) QBXMint else QBXDivider)
                 )
             }
         }
@@ -153,7 +154,7 @@ fun LockScreen(onPinVerify: (String) -> Boolean, onUnlocked: () -> Unit) {
                             modifier = Modifier
                                 .size(64.dp)
                                 .clip(CircleShape)
-                                .background(if (key == "bio") QBXPurple.copy(alpha = 0.15f) else QBXSurface)
+                                .background(if (key == "bio") QBXMint.copy(alpha = 0.15f) else QBXSurface)
                                 .clickable {
                                     when (key) {
                                         "del" -> if (pin.isNotEmpty()) { pin = pin.dropLast(1); error = false }
@@ -172,7 +173,7 @@ fun LockScreen(onPinVerify: (String) -> Boolean, onUnlocked: () -> Unit) {
                             contentAlignment = Alignment.Center
                         ) {
                             when (key) {
-                                "bio" -> Icon(Icons.Default.Fingerprint, null, tint = QBXPurple, modifier = Modifier.size(28.dp))
+                                "bio" -> Icon(Icons.Default.Fingerprint, null, tint = QBXMint, modifier = Modifier.size(28.dp))
                                 "del" -> Icon(Icons.Default.Backspace, null, tint = QBXOnSurfaceDim, modifier = Modifier.size(24.dp))
                                 else -> Text(key, fontSize = 22.sp, fontWeight = FontWeight.Medium, color = QBXOnSurface)
                             }
@@ -219,7 +220,7 @@ fun WalletScreen(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Text("Q-BitX", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = QBXOnSurface)
+            QbxBrand()
             IconButton(onClick = onNavigateToSettings) {
                 Icon(Icons.Outlined.Settings, "Settings", tint = QBXOnSurfaceDim)
             }
@@ -234,7 +235,7 @@ fun WalletScreen(
             Icon(
                 Icons.Default.Shield,
                 null,
-                tint = QBXPurple,
+                tint = QBXMint,
                 modifier = Modifier.size(64.dp)
             )
 
@@ -262,9 +263,9 @@ fun WalletScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(54.dp),
-                shape = RoundedCornerShape(12.dp),
+                shape = RoundedCornerShape(8.dp),
                 enabled = !state.isLoading,
-                colors = ButtonDefaults.buttonColors(containerColor = QBXPurple)
+                colors = ButtonDefaults.buttonColors(containerColor = QBXMint, contentColor = QBXInk)
             ) {
                 if (state.isLoading) {
                     CircularProgressIndicator(modifier = Modifier.size(22.dp), color = QBXOnSurface, strokeWidth = 2.dp)
@@ -302,7 +303,7 @@ fun WalletScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(54.dp),
-                shape = RoundedCornerShape(12.dp),
+                shape = RoundedCornerShape(8.dp),
                 colors = ButtonDefaults.outlinedButtonColors(contentColor = QBXOnSurface),
                 border = androidx.compose.foundation.BorderStroke(1.dp, QBXDivider)
             ) {
@@ -318,8 +319,8 @@ fun WalletScreen(
                 Button(
                     onClick = { filePickerLauncher.launch(arrayOf("*/*")) },
                     modifier = Modifier.fillMaxWidth().height(48.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = QBXPurple)
+                    shape = RoundedCornerShape(8.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = QBXMint, contentColor = QBXInk)
                 ) {
                     Icon(Icons.Default.FolderOpen, null, modifier = Modifier.size(18.dp))
                     Spacer(Modifier.width(10.dp))
@@ -333,17 +334,18 @@ fun WalletScreen(
                 OutlinedTextField(
                     value = importKey,
                     onValueChange = { importKey = it },
+                    keyboardOptions = KeyboardOptions(autoCorrect = false, keyboardType = KeyboardType.Password),
                     placeholder = { Text("24 English seed words or legacy key backup", color = QBXOnSurfaceDim.copy(alpha = 0.5f)) },
                     modifier = Modifier.fillMaxWidth(),
                     minLines = 3,
                     maxLines = 5,
-                    shape = RoundedCornerShape(12.dp),
+                    shape = RoundedCornerShape(8.dp),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = QBXPurple,
+                        focusedBorderColor = QBXMint,
                         unfocusedBorderColor = QBXDivider,
                         focusedContainerColor = QBXSurface,
                         unfocusedContainerColor = QBXSurface,
-                        cursorColor = QBXPurple,
+                        cursorColor = QBXMint,
                         focusedTextColor = QBXOnSurface,
                         unfocusedTextColor = QBXOnSurface
                     )
@@ -352,9 +354,9 @@ fun WalletScreen(
                 Button(
                     onClick = { onImportWallet(importKey) },
                     modifier = Modifier.fillMaxWidth().height(48.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    enabled = (importKey.contains(":") || importKey.trim().split(Regex("\\s+")).size == 24) && !state.isLoading,
-                    colors = ButtonDefaults.buttonColors(containerColor = QBXPurple)
+                    shape = RoundedCornerShape(8.dp),
+                    enabled = (importKey.trim().startsWith("{") || importKey.contains(":") || importKey.trim().split(Regex("\\s+")).size == 24) && !state.isLoading,
+                    colors = ButtonDefaults.buttonColors(containerColor = QBXMint, contentColor = QBXInk)
                 ) {
                     if (state.isLoading) {
                         CircularProgressIndicator(modifier = Modifier.size(22.dp), color = QBXOnSurface, strokeWidth = 2.dp)
@@ -385,7 +387,7 @@ fun WalletScreen(
                         .padding(16.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(icon, null, tint = QBXPurple, modifier = Modifier.size(24.dp))
+                    Icon(icon, null, tint = QBXMint, modifier = Modifier.size(24.dp))
                     Spacer(Modifier.width(14.dp))
                     Column {
                         Text(title, fontSize = 14.sp, fontWeight = FontWeight.Medium, color = QBXOnSurface)
@@ -410,7 +412,7 @@ fun WalletScreen(
                     .padding(horizontal = 16.dp, vertical = 12.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(Icons.Default.AccountBalanceWallet, null, tint = QBXPurple, modifier = Modifier.size(22.dp))
+                Icon(Icons.Default.AccountBalanceWallet, null, tint = QBXMint, modifier = Modifier.size(22.dp))
                 Spacer(Modifier.width(12.dp))
                 Column(modifier = Modifier.weight(1f)) {
                     Text(state.activeWalletName, fontSize = 15.sp, fontWeight = FontWeight.SemiBold, color = QBXOnSurface)
@@ -422,11 +424,11 @@ fun WalletScreen(
                     modifier = Modifier
                         .size(32.dp)
                         .clip(CircleShape)
-                        .background(QBXPurple.copy(alpha = 0.15f))
+                        .background(QBXMint.copy(alpha = 0.15f))
                         .clickable { showAddDialog = true },
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(Icons.Default.Add, null, tint = QBXPurple, modifier = Modifier.size(18.dp))
+                    Icon(Icons.Default.Add, null, tint = QBXMint, modifier = Modifier.size(18.dp))
                 }
 
                 DropdownMenu(expanded = showWalletMenu, onDismissRequest = { showWalletMenu = false }) {
@@ -435,7 +437,7 @@ fun WalletScreen(
                             text = {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     if (wallet.address == state.address) {
-                                        Icon(Icons.Default.Check, null, tint = QBXPurple, modifier = Modifier.size(16.dp))
+                                        Icon(Icons.Default.Check, null, tint = QBXMint, modifier = Modifier.size(16.dp))
                                         Spacer(Modifier.width(8.dp))
                                     }
                                     Column {
@@ -459,7 +461,7 @@ fun WalletScreen(
                     containerColor = QBXSurface,
                     titleContentColor = QBXOnSurface,
                     textContentColor = QBXOnSurface,
-                    shape = RoundedCornerShape(16.dp),
+                    shape = RoundedCornerShape(8.dp),
                     title = { Text(stringResource(R.string.new_wallet_title), fontWeight = FontWeight.SemiBold) },
                     text = {
                         OutlinedTextField(
@@ -467,19 +469,19 @@ fun WalletScreen(
                             onValueChange = { newWalletName = it },
                             placeholder = { Text(stringResource(R.string.new_wallet_name_hint), color = QBXOnSurfaceDim.copy(alpha = 0.5f)) },
                             singleLine = true,
-                            shape = RoundedCornerShape(12.dp),
+                            shape = RoundedCornerShape(8.dp),
                             colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = QBXPurple, unfocusedBorderColor = QBXDivider,
+                                focusedBorderColor = QBXMint, unfocusedBorderColor = QBXDivider,
                                 focusedContainerColor = QBXSurface, unfocusedContainerColor = QBXSurface,
-                                cursorColor = QBXPurple, focusedTextColor = QBXOnSurface, unfocusedTextColor = QBXOnSurface
+                                cursorColor = QBXMint, focusedTextColor = QBXOnSurface, unfocusedTextColor = QBXOnSurface
                             )
                         )
                     },
                     confirmButton = {
                         Button(
                             onClick = { onAddWallet(newWalletName); showAddDialog = false; newWalletName = "" },
-                            colors = ButtonDefaults.buttonColors(containerColor = QBXPurple),
-                            shape = RoundedCornerShape(12.dp)
+                            colors = ButtonDefaults.buttonColors(containerColor = QBXMint, contentColor = QBXInk),
+                            shape = RoundedCornerShape(8.dp)
                         ) { Text(stringResource(R.string.btn_create)) }
                     },
                     dismissButton = {
@@ -496,7 +498,7 @@ fun WalletScreen(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clip(RoundedCornerShape(16.dp))
+                    .clip(RoundedCornerShape(8.dp))
                     .background(BalanceGradient)
                     .padding(24.dp)
             ) {
@@ -523,7 +525,7 @@ fun WalletScreen(
                             "%.8f".format(state.balance),
                             fontSize = 32.sp,
                             fontWeight = FontWeight.Bold,
-                            color = QBXOnSurface
+                            color = QBXMint
                         )
                         Spacer(Modifier.width(8.dp))
                         Text(
@@ -570,7 +572,7 @@ fun WalletScreen(
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clip(RoundedCornerShape(12.dp))
+                        .clip(RoundedCornerShape(8.dp))
                         .background(androidx.compose.ui.graphics.Color(0xFFFFAB40).copy(alpha = 0.15f))
                         .padding(horizontal = 16.dp, vertical = 12.dp)
                 ) {
@@ -614,7 +616,7 @@ fun WalletScreen(
                         .padding(vertical = 12.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Icon(Icons.Default.ArrowUpward, null, tint = QBXPurple, modifier = Modifier.size(20.dp))
+                    Icon(Icons.Default.ArrowUpward, null, tint = QBXMint, modifier = Modifier.size(20.dp))
                     Spacer(Modifier.height(4.dp))
                     Text(stringResource(R.string.btn_send), fontSize = 11.sp, color = QBXOnSurface)
                 }
@@ -628,7 +630,7 @@ fun WalletScreen(
                         .padding(vertical = 12.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Icon(Icons.Default.ArrowDownward, null, tint = QBXPurple, modifier = Modifier.size(20.dp))
+                    Icon(Icons.Default.ArrowDownward, null, tint = QBXMint, modifier = Modifier.size(20.dp))
                     Spacer(Modifier.height(4.dp))
                     Text(stringResource(R.string.btn_receive), fontSize = 11.sp, color = QBXOnSurface)
                 }
@@ -642,7 +644,7 @@ fun WalletScreen(
                         .padding(vertical = 12.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Icon(Icons.Default.Refresh, null, tint = QBXPurple, modifier = Modifier.size(20.dp))
+                    Icon(Icons.Default.Refresh, null, tint = QBXMint, modifier = Modifier.size(20.dp))
                     Spacer(Modifier.height(4.dp))
                     Text(stringResource(R.string.btn_refresh), fontSize = 11.sp, color = QBXOnSurface)
                 }
@@ -656,7 +658,7 @@ fun WalletScreen(
                         .padding(vertical = 12.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Icon(Icons.Default.List, null, tint = QBXPurple, modifier = Modifier.size(20.dp))
+                    Icon(Icons.Default.List, null, tint = QBXMint, modifier = Modifier.size(20.dp))
                     Spacer(Modifier.height(4.dp))
                     Text(stringResource(R.string.btn_history), fontSize = 11.sp, color = QBXOnSurface)
                 }
@@ -715,7 +717,7 @@ fun WalletScreen(
                     CircularProgressIndicator(
                         modifier = Modifier.size(18.dp),
                         strokeWidth = 2.dp,
-                        color = QBXPurple
+                        color = QBXMint
                     )
                     Spacer(Modifier.width(10.dp))
                     Text(state.scanProgressText!!, fontSize = 13.sp, color = QBXOnSurfaceDim)
@@ -730,7 +732,7 @@ fun WalletScreen(
                 ) {
                     Text(stringResource(R.string.recent_tx), fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = QBXOnSurface)
                     TextButton(onClick = onNavigateToHistory) {
-                        Text(stringResource(R.string.view_all_tx), fontSize = 12.sp, color = QBXPurple)
+                        Text(stringResource(R.string.view_all_tx), fontSize = 12.sp, color = QBXMint)
                     }
                 }
                 Spacer(Modifier.height(8.dp))
@@ -790,7 +792,7 @@ fun WalletScreen(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clip(RoundedCornerShape(12.dp))
+                    .clip(RoundedCornerShape(8.dp))
                     .background(QBXRed.copy(alpha = 0.1f))
                     .padding(14.dp),
                 verticalAlignment = Alignment.Top
@@ -823,7 +825,7 @@ fun AddressCard(address: String) {
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Icon(Icons.Default.QrCode2, null, tint = QBXPurple, modifier = Modifier.size(22.dp))
+        Icon(Icons.Default.QrCode2, null, tint = QBXMint, modifier = Modifier.size(22.dp))
         Spacer(Modifier.width(12.dp))
         Column(modifier = Modifier.weight(1f)) {
             Text(stringResource(R.string.pq_address), fontSize = 11.sp, color = QBXOnSurfaceDim)
@@ -929,13 +931,13 @@ fun SendScreen(
                 placeholder = { Text(stringResource(R.string.send_address_hint), color = QBXOnSurfaceDim.copy(alpha = 0.5f)) },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
-                shape = RoundedCornerShape(12.dp),
+                shape = RoundedCornerShape(8.dp),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = QBXPurple,
+                    focusedBorderColor = QBXMint,
                     unfocusedBorderColor = QBXDivider,
                     focusedContainerColor = QBXSurface,
                     unfocusedContainerColor = QBXSurface,
-                    cursorColor = QBXPurple,
+                    cursorColor = QBXMint,
                     focusedTextColor = QBXOnSurface,
                     unfocusedTextColor = QBXOnSurface
                 ),
@@ -950,7 +952,7 @@ fun SendScreen(
                         }
                         scanLauncher.launch(options)
                     }) {
-                        Icon(Icons.Default.QrCodeScanner, stringResource(R.string.send_scan_qr), tint = QBXPurple)
+                        Icon(Icons.Default.QrCodeScanner, stringResource(R.string.send_scan_qr), tint = QBXMint)
                     }
                 }
             )
@@ -966,14 +968,14 @@ fun SendScreen(
                 placeholder = { Text("0.00000000", color = QBXOnSurfaceDim.copy(alpha = 0.5f)) },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
-                shape = RoundedCornerShape(12.dp),
+                shape = RoundedCornerShape(8.dp),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = QBXPurple,
+                    focusedBorderColor = QBXMint,
                     unfocusedBorderColor = QBXDivider,
                     focusedContainerColor = QBXSurface,
                     unfocusedContainerColor = QBXSurface,
-                    cursorColor = QBXPurple,
+                    cursorColor = QBXMint,
                     focusedTextColor = QBXOnSurface,
                     unfocusedTextColor = QBXOnSurface
                 ),
@@ -995,12 +997,12 @@ fun SendScreen(
                     Column(
                         modifier = Modifier
                             .weight(1f)
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(if (selected) QBXPurple.copy(alpha = 0.15f) else QBXSurface)
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(if (selected) QBXMint.copy(alpha = 0.15f) else QBXSurface)
                             .border(
                                 1.dp,
-                                if (selected) QBXPurple else QBXDivider,
-                                RoundedCornerShape(12.dp)
+                                if (selected) QBXMint else QBXDivider,
+                                RoundedCornerShape(8.dp)
                             )
                             .clickable { feePolicy = key }
                             .padding(vertical = 14.dp),
@@ -1010,7 +1012,7 @@ fun SendScreen(
                             label,
                             fontSize = 13.sp,
                             fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
-                            color = if (selected) QBXPurple else QBXOnSurfaceDim
+                            color = if (selected) QBXMint else QBXOnSurfaceDim
                         )
                         Spacer(Modifier.height(2.dp))
                         Text(sub, fontSize = 11.sp, color = QBXOnSurfaceDim.copy(alpha = 0.6f))
@@ -1026,11 +1028,11 @@ fun SendScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(54.dp),
-                shape = RoundedCornerShape(12.dp),
+                shape = RoundedCornerShape(8.dp),
                 enabled = toAddress.isNotBlank() && amount.toDoubleOrNull() != null && amount.toDouble() > 0 && !state.isLoading,
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = QBXPurple,
-                    disabledContainerColor = QBXPurple.copy(alpha = 0.3f)
+                    containerColor = QBXMint,
+                    disabledContainerColor = QBXMint.copy(alpha = 0.3f)
                 )
             ) {
                 if (state.isLoading) {
@@ -1048,8 +1050,8 @@ fun SendScreen(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(QBXPurple.copy(alpha = 0.1f))
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(QBXMint.copy(alpha = 0.1f))
                         .padding(14.dp)
                 ) {
                     Text(
@@ -1066,8 +1068,8 @@ fun SendScreen(
                             else 0f
                         },
                         modifier = Modifier.fillMaxWidth(),
-                        color = QBXPurple,
-                        trackColor = QBXPurple.copy(alpha = 0.2f)
+                        color = QBXMint,
+                        trackColor = QBXMint.copy(alpha = 0.2f)
                     )
                     Spacer(Modifier.height(6.dp))
                     Text(
@@ -1084,7 +1086,7 @@ fun SendScreen(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clip(RoundedCornerShape(12.dp))
+                        .clip(RoundedCornerShape(8.dp))
                         .background(QBXGreen.copy(alpha = 0.1f))
                         .padding(14.dp),
                     verticalAlignment = Alignment.Top
@@ -1105,7 +1107,7 @@ fun SendScreen(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clip(RoundedCornerShape(12.dp))
+                        .clip(RoundedCornerShape(8.dp))
                         .background(QBXRed.copy(alpha = 0.1f))
                         .padding(14.dp),
                     verticalAlignment = Alignment.Top
@@ -1126,7 +1128,7 @@ fun SendScreen(
                 containerColor = QBXSurface,
                 titleContentColor = QBXOnSurface,
                 textContentColor = QBXOnSurface,
-                shape = RoundedCornerShape(16.dp),
+                shape = RoundedCornerShape(8.dp),
                 title = { Text(stringResource(R.string.confirm_title), fontWeight = FontWeight.SemiBold) },
                 text = {
                     Column {
@@ -1134,7 +1136,7 @@ fun SendScreen(
                         Text(toAddress, fontSize = 13.sp, fontFamily = FontFamily.Monospace, color = QBXOnSurface)
                         Spacer(Modifier.height(8.dp))
                         Text(stringResource(R.string.confirm_amount), fontSize = 12.sp, color = QBXOnSurfaceDim)
-                        Text("$amount QBX", fontWeight = FontWeight.Bold, fontSize = 18.sp, color = QBXPurple)
+                        Text("$amount QBX", fontWeight = FontWeight.Bold, fontSize = 18.sp, color = QBXMint)
                         Spacer(Modifier.height(4.dp))
                         Text(stringResource(R.string.confirm_fees, feePolicy), fontSize = 12.sp, color = QBXOnSurfaceDim)
                     }
@@ -1145,8 +1147,8 @@ fun SendScreen(
                             showConfirm = false
                             amount.toDoubleOrNull()?.let { amt -> onSend(toAddress, amt, feePolicy) }
                         },
-                        colors = ButtonDefaults.buttonColors(containerColor = QBXPurple),
-                        shape = RoundedCornerShape(12.dp)
+                        colors = ButtonDefaults.buttonColors(containerColor = QBXMint, contentColor = QBXInk),
+                        shape = RoundedCornerShape(8.dp)
                     ) { Text(stringResource(R.string.btn_confirm)) }
                 },
                 dismissButton = {
@@ -1171,8 +1173,8 @@ fun ReceiveScreen(
     val clipboardManager = LocalClipboardManager.current
     var copied by remember { mutableStateOf(false) }
     // The wallet has two addresses for the same key: legacy "M..." and native PQ
-    // witness "dil1q...". The legacy address stays the default; a button switches.
-    var showWitness by remember { mutableStateOf(false) }
+    // witness "dil1q...". Prefer native PQ; legacy remains available for compatibility.
+    var showWitness by remember(address,witnessAddress) { mutableStateOf(witnessAddress.isNotEmpty()) }
     val shownAddress = if (showWitness && witnessAddress.isNotEmpty()) witnessAddress else address
 
     Column(
@@ -1205,7 +1207,7 @@ fun ReceiveScreen(
                 .padding(horizontal = 40.dp)
                 .fillMaxWidth()
                 .aspectRatio(1f)
-                .clip(RoundedCornerShape(16.dp))
+                .clip(RoundedCornerShape(8.dp))
                 .background(QBXSurface),
             contentAlignment = Alignment.Center
         ) {
@@ -1249,9 +1251,9 @@ fun ReceiveScreen(
         if (witnessAddress.isNotEmpty()) {
             TextButton(onClick = { showWitness = !showWitness; copied = false }) {
                 Text(
-                    if (showWitness) "Legacy-Adresse (M…) anzeigen" else "PQ-Witness-Adresse (dil1…) anzeigen",
+                    stringResource(if (showWitness) R.string.receive_show_legacy else R.string.receive_show_native),
                     fontSize = 13.sp,
-                    color = QBXPurple
+                    color = QBXMint
                 )
             }
         } else {
@@ -1268,9 +1270,9 @@ fun ReceiveScreen(
                 .fillMaxWidth()
                 .padding(horizontal = 20.dp)
                 .height(54.dp),
-            shape = RoundedCornerShape(12.dp),
+            shape = RoundedCornerShape(8.dp),
             colors = ButtonDefaults.buttonColors(
-                containerColor = if (copied) QBXGreen else QBXPurple
+                containerColor = if (copied) QBXGreen else QBXMint
             )
         ) {
             Icon(
@@ -1363,7 +1365,7 @@ fun HistoryScreen(
                     CircularProgressIndicator(
                         modifier = Modifier.size(18.dp),
                         strokeWidth = 2.dp,
-                        color = QBXPurple
+                        color = QBXMint
                     )
                     Spacer(Modifier.width(10.dp))
                     Text(state.scanProgressText!!, fontSize = 13.sp, color = QBXOnSurfaceDim)
@@ -1503,14 +1505,14 @@ fun SettingsScreen(
     var rpcUrl by remember { mutableStateOf(state.rpcUrl) }
 
     val fieldColors = OutlinedTextFieldDefaults.colors(
-        focusedBorderColor = QBXPurple,
+        focusedBorderColor = QBXMint,
         unfocusedBorderColor = QBXDivider,
         focusedContainerColor = QBXSurface,
         unfocusedContainerColor = QBXSurface,
-        cursorColor = QBXPurple,
+        cursorColor = QBXMint,
         focusedTextColor = QBXOnSurface,
         unfocusedTextColor = QBXOnSurface,
-        focusedLabelColor = QBXPurple,
+        focusedLabelColor = QBXMint,
         unfocusedLabelColor = QBXOnSurfaceDim
     )
 
@@ -1569,11 +1571,11 @@ fun SettingsScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(54.dp),
-                    shape = RoundedCornerShape(16.dp),
+                    shape = RoundedCornerShape(8.dp),
                     enabled = !state.isLoading && rpcUrl.isNotBlank(),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = QBXPurple,
-                        disabledContainerColor = QBXPurple.copy(alpha = 0.3f)
+                        containerColor = QBXMint,
+                        disabledContainerColor = QBXMint.copy(alpha = 0.3f)
                     )
                 ) {
                     if (state.isLoading) {
@@ -1643,7 +1645,7 @@ fun SettingsScreen(
                             backupKey?.let { key ->
                                 try {
                                     context.contentResolver.openOutputStream(it)?.use { out ->
-                                        out.write(key.toByteArray())
+                                        out.write(org.qbitx.wallet.crypto.SeedWallet.backupEnvelope(key).toByteArray(Charsets.UTF_8))
                                     }
                                     fileSaved = true
                                 } catch (_: Exception) {}
@@ -1654,8 +1656,8 @@ fun SettingsScreen(
                     Button(
                         onClick = { backupKey = onExportBackup() },
                         modifier = Modifier.fillMaxWidth().height(48.dp),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = QBXPurple)
+                        shape = RoundedCornerShape(8.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = QBXMint, contentColor = QBXInk)
                     ) {
                         Icon(Icons.Default.Key, null, modifier = Modifier.size(18.dp))
                         Spacer(Modifier.width(10.dp))
@@ -1668,7 +1670,7 @@ fun SettingsScreen(
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .clip(RoundedCornerShape(12.dp))
+                                .clip(RoundedCornerShape(8.dp))
                                 .background(QBXRed.copy(alpha = 0.1f))
                                 .padding(12.dp),
                             verticalAlignment = Alignment.CenterVertically
@@ -1684,8 +1686,8 @@ fun SettingsScreen(
                         Button(
                             onClick = { saveFileLauncher.launch("qbitx-backup.qbx") },
                             modifier = Modifier.fillMaxWidth().height(48.dp),
-                            shape = RoundedCornerShape(12.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = QBXGreen)
+                            shape = RoundedCornerShape(8.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = QBXGreen, contentColor = QBXInk)
                         ) {
                             Icon(
                                 if (fileSaved) Icons.Default.Check else Icons.Default.SaveAlt,
@@ -1725,7 +1727,7 @@ fun SettingsScreen(
                                 copied = true
                             },
                             modifier = Modifier.fillMaxWidth().height(44.dp),
-                            shape = RoundedCornerShape(12.dp)
+                            shape = RoundedCornerShape(8.dp)
                         ) {
                             Icon(
                                 if (copied) Icons.Default.Check else Icons.Default.ContentCopy,
@@ -1752,7 +1754,7 @@ fun SettingsScreen(
                     OutlinedButton(
                         onClick = { showDeleteConfirm = true },
                         modifier = Modifier.fillMaxWidth().height(48.dp),
-                        shape = RoundedCornerShape(12.dp),
+                        shape = RoundedCornerShape(8.dp),
                         colors = ButtonDefaults.outlinedButtonColors(contentColor = QBXRed),
                         border = androidx.compose.foundation.BorderStroke(1.dp, QBXRed.copy(alpha = 0.5f))
                     ) {
@@ -1767,7 +1769,7 @@ fun SettingsScreen(
                             containerColor = QBXSurface,
                             titleContentColor = QBXOnSurface,
                             textContentColor = QBXOnSurface,
-                            shape = RoundedCornerShape(16.dp),
+                            shape = RoundedCornerShape(8.dp),
                             title = { Text(stringResource(R.string.settings_delete_confirm_title), fontWeight = FontWeight.SemiBold) },
                             text = {
                                 Text(
@@ -1783,7 +1785,7 @@ fun SettingsScreen(
                                         onBack()
                                     },
                                     colors = ButtonDefaults.buttonColors(containerColor = QBXRed),
-                                    shape = RoundedCornerShape(12.dp)
+                                    shape = RoundedCornerShape(8.dp)
                                 ) { Text(stringResource(R.string.settings_delete_yes)) }
                             },
                             dismissButton = {
@@ -1826,7 +1828,7 @@ fun SettingsScreen(
                     OutlinedButton(
                         onClick = { onRemovePin() },
                         modifier = Modifier.fillMaxWidth().height(44.dp),
-                        shape = RoundedCornerShape(12.dp),
+                        shape = RoundedCornerShape(8.dp),
                         colors = ButtonDefaults.outlinedButtonColors(contentColor = QBXRed),
                         border = androidx.compose.foundation.BorderStroke(1.dp, QBXRed.copy(alpha = 0.5f))
                     ) {
@@ -1838,8 +1840,8 @@ fun SettingsScreen(
                     Button(
                         onClick = { showPinSetup = true },
                         modifier = Modifier.fillMaxWidth().height(48.dp),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = QBXPurple)
+                        shape = RoundedCornerShape(8.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = QBXMint, contentColor = QBXInk)
                     ) {
                         Icon(Icons.Default.Lock, null, modifier = Modifier.size(18.dp))
                         Spacer(Modifier.width(10.dp))
@@ -1853,7 +1855,7 @@ fun SettingsScreen(
                         containerColor = QBXSurface,
                         titleContentColor = QBXOnSurface,
                         textContentColor = QBXOnSurface,
-                        shape = RoundedCornerShape(16.dp),
+                        shape = RoundedCornerShape(8.dp),
                         title = { Text(stringResource(R.string.settings_setup_pin_title), fontWeight = FontWeight.SemiBold) },
                         text = {
                             Column {
@@ -1862,11 +1864,11 @@ fun SettingsScreen(
                                     label = { Text(stringResource(R.string.settings_new_pin)) }, singleLine = true,
                                     visualTransformation = PasswordVisualTransformation(),
                                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
-                                    shape = RoundedCornerShape(12.dp),
+                                    shape = RoundedCornerShape(8.dp),
                                     colors = OutlinedTextFieldDefaults.colors(
-                                        focusedBorderColor = QBXPurple, unfocusedBorderColor = QBXDivider,
+                                        focusedBorderColor = QBXMint, unfocusedBorderColor = QBXDivider,
                                         focusedContainerColor = QBXSurface, unfocusedContainerColor = QBXSurface,
-                                        cursorColor = QBXPurple, focusedTextColor = QBXOnSurface, unfocusedTextColor = QBXOnSurface
+                                        cursorColor = QBXMint, focusedTextColor = QBXOnSurface, unfocusedTextColor = QBXOnSurface
                                     )
                                 )
                                 Spacer(Modifier.height(8.dp))
@@ -1875,11 +1877,11 @@ fun SettingsScreen(
                                     label = { Text(stringResource(R.string.settings_confirm_pin)) }, singleLine = true,
                                     visualTransformation = PasswordVisualTransformation(),
                                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
-                                    shape = RoundedCornerShape(12.dp),
+                                    shape = RoundedCornerShape(8.dp),
                                     colors = OutlinedTextFieldDefaults.colors(
-                                        focusedBorderColor = QBXPurple, unfocusedBorderColor = QBXDivider,
+                                        focusedBorderColor = QBXMint, unfocusedBorderColor = QBXDivider,
                                         focusedContainerColor = QBXSurface, unfocusedContainerColor = QBXSurface,
-                                        cursorColor = QBXPurple, focusedTextColor = QBXOnSurface, unfocusedTextColor = QBXOnSurface
+                                        cursorColor = QBXMint, focusedTextColor = QBXOnSurface, unfocusedTextColor = QBXOnSurface
                                     )
                                 )
                                 if (pinError.isNotEmpty()) {
@@ -1900,8 +1902,8 @@ fun SettingsScreen(
                                         }
                                     }
                                 },
-                                colors = ButtonDefaults.buttonColors(containerColor = QBXPurple),
-                                shape = RoundedCornerShape(12.dp)
+                                colors = ButtonDefaults.buttonColors(containerColor = QBXMint, contentColor = QBXInk),
+                                shape = RoundedCornerShape(8.dp)
                             ) { Text(stringResource(R.string.btn_save)) }
                         },
                         dismissButton = {
@@ -1928,19 +1930,19 @@ fun SettingsScreen(
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(if (isActive) QBXPurple.copy(alpha = 0.08f) else QBXSurface)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(if (isActive) QBXMint.copy(alpha = 0.08f) else QBXSurface)
                                 .border(
                                     1.dp,
-                                    if (isActive) QBXPurple.copy(alpha = 0.3f) else QBXDivider.copy(alpha = 0.3f),
-                                    RoundedCornerShape(12.dp)
+                                    if (isActive) QBXMint.copy(alpha = 0.3f) else QBXDivider.copy(alpha = 0.3f),
+                                    RoundedCornerShape(8.dp)
                                 )
                                 .clickable { onSwitchWallet(wallet.id) }
                                 .padding(14.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             if (isActive) {
-                                Icon(Icons.Default.RadioButtonChecked, null, tint = QBXPurple, modifier = Modifier.size(18.dp))
+                                Icon(Icons.Default.RadioButtonChecked, null, tint = QBXMint, modifier = Modifier.size(18.dp))
                             } else {
                                 Icon(Icons.Default.RadioButtonUnchecked, null, tint = QBXOnSurfaceDim, modifier = Modifier.size(18.dp))
                             }
@@ -1965,7 +1967,7 @@ fun SettingsScreen(
                         OutlinedButton(
                             onClick = { showRename = true; renameText = state.activeWalletName },
                             modifier = Modifier.weight(1f).height(44.dp),
-                            shape = RoundedCornerShape(12.dp)
+                            shape = RoundedCornerShape(8.dp)
                         ) {
                             Icon(Icons.Default.Edit, null, modifier = Modifier.size(16.dp), tint = QBXOnSurface)
                             Spacer(Modifier.width(6.dp))
@@ -1975,7 +1977,7 @@ fun SettingsScreen(
                             OutlinedButton(
                                 onClick = { onDeleteActiveWallet() },
                                 modifier = Modifier.weight(1f).height(44.dp),
-                                shape = RoundedCornerShape(12.dp),
+                                shape = RoundedCornerShape(8.dp),
                                 colors = ButtonDefaults.outlinedButtonColors(contentColor = QBXRed),
                                 border = androidx.compose.foundation.BorderStroke(1.dp, QBXRed.copy(alpha = 0.5f))
                             ) {
@@ -1991,8 +1993,8 @@ fun SettingsScreen(
                     Button(
                         onClick = { showAddWallet = true },
                         modifier = Modifier.fillMaxWidth().height(44.dp),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = QBXPurple)
+                        shape = RoundedCornerShape(8.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = QBXMint, contentColor = QBXInk)
                     ) {
                         Icon(Icons.Default.Add, null, modifier = Modifier.size(16.dp))
                         Spacer(Modifier.width(8.dp))
@@ -2005,25 +2007,25 @@ fun SettingsScreen(
                             containerColor = QBXSurface,
                             titleContentColor = QBXOnSurface,
                             textContentColor = QBXOnSurface,
-                            shape = RoundedCornerShape(16.dp),
+                            shape = RoundedCornerShape(8.dp),
                             title = { Text(stringResource(R.string.settings_new_wallet), fontWeight = FontWeight.SemiBold) },
                             text = {
                                 OutlinedTextField(
                                     value = addWalletName, onValueChange = { addWalletName = it },
                                     placeholder = { Text("Name (optional)", color = QBXOnSurfaceDim.copy(alpha = 0.5f)) },
-                                    singleLine = true, shape = RoundedCornerShape(12.dp),
+                                    singleLine = true, shape = RoundedCornerShape(8.dp),
                                     colors = OutlinedTextFieldDefaults.colors(
-                                        focusedBorderColor = QBXPurple, unfocusedBorderColor = QBXDivider,
+                                        focusedBorderColor = QBXMint, unfocusedBorderColor = QBXDivider,
                                         focusedContainerColor = QBXSurface, unfocusedContainerColor = QBXSurface,
-                                        cursorColor = QBXPurple, focusedTextColor = QBXOnSurface, unfocusedTextColor = QBXOnSurface
+                                        cursorColor = QBXMint, focusedTextColor = QBXOnSurface, unfocusedTextColor = QBXOnSurface
                                     )
                                 )
                             },
                             confirmButton = {
                                 Button(
                                     onClick = { onAddWallet(addWalletName); showAddWallet = false; addWalletName = "" },
-                                    colors = ButtonDefaults.buttonColors(containerColor = QBXPurple),
-                                    shape = RoundedCornerShape(12.dp)
+                                    colors = ButtonDefaults.buttonColors(containerColor = QBXMint, contentColor = QBXInk),
+                                    shape = RoundedCornerShape(8.dp)
                                 ) { Text(stringResource(R.string.btn_create)) }
                             },
                             dismissButton = {
@@ -2040,24 +2042,24 @@ fun SettingsScreen(
                             containerColor = QBXSurface,
                             titleContentColor = QBXOnSurface,
                             textContentColor = QBXOnSurface,
-                            shape = RoundedCornerShape(16.dp),
+                            shape = RoundedCornerShape(8.dp),
                             title = { Text(stringResource(R.string.settings_rename_wallet), fontWeight = FontWeight.SemiBold) },
                             text = {
                                 OutlinedTextField(
                                     value = renameText, onValueChange = { renameText = it },
-                                    singleLine = true, shape = RoundedCornerShape(12.dp),
+                                    singleLine = true, shape = RoundedCornerShape(8.dp),
                                     colors = OutlinedTextFieldDefaults.colors(
-                                        focusedBorderColor = QBXPurple, unfocusedBorderColor = QBXDivider,
+                                        focusedBorderColor = QBXMint, unfocusedBorderColor = QBXDivider,
                                         focusedContainerColor = QBXSurface, unfocusedContainerColor = QBXSurface,
-                                        cursorColor = QBXPurple, focusedTextColor = QBXOnSurface, unfocusedTextColor = QBXOnSurface
+                                        cursorColor = QBXMint, focusedTextColor = QBXOnSurface, unfocusedTextColor = QBXOnSurface
                                     )
                                 )
                             },
                             confirmButton = {
                                 Button(
                                     onClick = { onRenameWallet(renameText); showRename = false },
-                                    colors = ButtonDefaults.buttonColors(containerColor = QBXPurple),
-                                    shape = RoundedCornerShape(12.dp)
+                                    colors = ButtonDefaults.buttonColors(containerColor = QBXMint, contentColor = QBXInk),
+                                    shape = RoundedCornerShape(8.dp)
                                 ) { Text(stringResource(R.string.btn_save)) }
                             },
                             dismissButton = {

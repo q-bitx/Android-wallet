@@ -3,6 +3,11 @@
 Native Android/Kotlin implementation based on L2b2n's MIT wallet. This Android milestone
 uses the existing UI and signer; Flutter and iOS have not been implemented.
 
+Version 1.6.1 includes a targeted seed/JNI/storage audit and the Mining/Explorer design system.
+The v1 seed mapping is unchanged; an actual APK 1.6.0 → 1.6.1 update was tested on Android 15.
+Seed files now carry versioned JSON metadata; plain 24-word v1 imports still work.
+See SECURITY_REVIEW.md, DESIGN_SYSTEM.md and the separate delivered audit report/log archive.
+
 ## Included
 
 - Create a new 24-word English BIP39 wallet and confirm its paper backup.

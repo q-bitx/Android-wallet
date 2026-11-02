@@ -1,50 +1,69 @@
-# Implementation security review — 1 November 2026
+# Targeted security review — 1 November 2026
 
-This is an internal source review and automated test record, not an independent security
-audit, penetration test, or production certification. Consult the delivered verification
-report for actual run results; CI configuration and test code alone do not prove execution.
+Internal review by Codex of seed derivation/recovery, encrypted storage, JNI boundaries,
+transaction approval/broadcast persistence and the Android interface. This is not an
+independent audit, NIST certification or proof of production readiness. The delivered
+AUDIT_REPORT.md and raw logs distinguish executed tests from untested release conditions.
 
-## Corrections
+## Findings addressed in 1.6.1
 
-- Removed inherited trust-all TLS and hostname verifier; disallowed HTTP and embedded RPC credentials.
-- Disabled cleartext in Android network security configuration; stopped redirects.
-- Normal RPC calls validate IDs and bound responses to 8 MB. The inherited raw-transaction
-  construction request is separately checked by a local transaction policy before signing.
-- Added generated BIP39 entropy, checksum validation, domain-separated versioned key expansion,
-  deterministic native API, encrypted seed storage, paper-backup confirmation and recovery tests.
-- Added device credential foreground gate and FLAG_SECURE. Keys/seed remain in Keystore-backed
-  encrypted preferences; OS backup remains disabled.
-- Added exact local input/output/change/fee validation, own-input checks, bounded canonical parser,
-  full-address/exact-fee approval, single-payment execution guard, and single-transaction limit.
-- Failed coinbase maturity lookups now reject spending instead of assuming non-coinbase status.
-- Preserve existing raw-key imports; never fabricate seed recovery for old random keys.
+| Severity | Finding | Change |
+|---|---|---|
+| High | Seed restoration wrote raw keys before seed/version in a second edit; failed writes could acknowledge an incomplete recovery record | One checked synchronous commit stores keys, seed, version, wallet list and active ID; errors do not return a created wallet |
+| High | Inputs were reserved only after a successful broadcast response; an ambiguous timeout could allow a retry against the same inputs | Persist reservations and an uncertain-broadcast marker before networking; history refresh cannot clear uncertain reservations |
+| Medium | A duplicate imported seed could create two local wallets with separate pending-spend state for one actual key | Deduplicate by public key and reuse the existing wallet ID |
+| Medium | Stored seed/version were not checked against both stored keys before signing | Re-derive the full pair on first use in a manager; reject unsupported metadata/mismatches, allow explicit valid-seed repair |
+| Medium | Seed file export omitted the recovery format/version | Versioned qbx-seed-backup JSON; reject unknown versions; keep plain 24-word v1 and legacy raw-key import |
+| Medium | Native boundary did not consistently handle nulls, invalid sizes, allocation failure or wipe secret copies on every exit | Bounded checked JNI API; local secret copies and volatile erasure; maximum message 1 MiB |
+| Medium | Optional app PIN used unsalted SHA256 and no durable attempt limit | Random salt, PBKDF2-HMAC-SHA256/120000, constant-time checks, persisted 5-attempt/30-second lockout; old hashes migrate on successful verification |
+| Low | BIP39 dictionary had only a word-count check | Check 2048 unique sorted entries and a frozen canonical SHA256 |
+| Low | Seed text input could enable keyboard autocorrection | Disable autocorrect and use password keyboard input variation; the keyboard/OS must still be trusted |
 
-## Remaining release blockers and limitations
+Existing protections remain: Android device credential foreground gate, FLAG_SECURE,
+disabled Android OS backup, Keystore-backed encrypted preferences, normal HTTPS certificate
+and hostname verification, no HTTP/redirects/embedded credentials, local transaction intent
+checking, exact-fee confirmation, single-transaction payments and a 0.1 QBX maximum fee.
 
-- No independent cryptographic review of the new application-specific derivation. Only one
-  account/key is implemented. This is not a full PQ-HD hierarchy or BIP32-compatible wallet.
-- Host crypto tests do not prove JNI/device behavior. Instrumentation tests must run on real
-  Android devices/emulators, covering backup/restore, process death, screen lock, backgrounding,
-  screenshots, biometrics/PIN, database durability, accessibility and repeated sends.
-- Preferences use the inherited AndroidX security-crypto prerelease dependency; migrate/review
-  its storage lifecycle and authentication binding before release. The device credential gates
-  UI access; it is not a claim that every key operation is hardware-backed or per-use authorized.
-- Managed strings and native stack temporaries cannot all be reliably erased. Existing export
-  UI can intentionally copy/save plaintext backup material. Clipboard/file threat model remains.
-- Inherited optional app PIN uses unsalted SHA256 and has no robust durable rate limiting.
-  Device credentials are mandatory in this preview, but this does not repair that inherited PIN design.
-- RPC is trusted for chain/UTXO/history data. No SPV/proof validation, authenticated genesis
-  binding or independent prevout proof check is implemented. A malicious RPC may falsify balance
-  or UTXO values; local intent checking alone is not complete protection against dishonest data.
-- History discovery relies on a nonstandard scanblocks RPC and inherited incremental scanning;
-  native/legacy history completeness, reorgs, mempool accounting and request budgets need further work.
-- A network timeout during broadcast is ambiguous. Pending-input persistence is inherited and
-  occurs after a successful response, not before submission. Query status before any retry.
-- Debug signing, no production release key, no reproducible-build attestation, no hardware-backed
-  key attestation, rooted-device guarantees, dependency vulnerability audit or store compliance review.
-- Android Gradle plugin 8.5.1 warns that SDK 36 is newer than its tested SDK range. Updating the
-  build toolchain and testing Android 15/16 edge-to-edge behavior remain release work.
+## Cryptographic evidence and its limits
 
-No production Core, pool, daemon settings, services or network rules were modified. Any local
-regtest process uses a new datadir and disabled peer connectivity. No mainnet broadcast is part
-of the test procedure.
+The inherited functions are named Dilithium3, but their sizes/algorithm correspond to
+ML-DSA-65. NIST ACVP known answers check exact key generation and pure-mode signature
+generation/verification, including contexts. Prehash modes and other parameter sets are
+outside the wallet's API and outside this audit. These tests are not a module certificate.
+
+The qbx-pqhd-v1 mapping is unchanged from 1.6.0. Tests compare complete public/private key
+bytes and both M/dil1q addresses. Randomized signatures are expected to differ; restored
+keys must verify them. "Lossless" here means identical key material and addresses for the
+same valid mnemonic and frozen recovery format, not recovery of missing or incorrect words.
+BIP39 has an 8-bit checksum for 24 words: some changed valid words can form a different
+valid mnemonic. The app rejects bad checksums; it cannot infer the originally intended seed.
+
+## Remaining release conditions
+
+- qbx-pqhd-v1 is application-specific, one account/key, not BIP32 or a complete PQ-HD tree.
+  It needs independent design review. Bitcoin wallets derive different keys from these words.
+- Real ARM Android hardware, Android 8/16, OS upgrades, biometric enrollment changes,
+  Keystore invalidation, host power failure and sustained lifecycle/concurrency behavior
+  need additional testing. Emulator tests do not establish hardware-backed guarantees.
+- The inherited AndroidX security-crypto alpha dependency and its lifecycle need a reviewed
+  migration. UI device authentication is not hardware authentication for every signing call.
+- Managed strings and all internal polynomial temporaries are not reliably erased. Rooted/
+  debugged or compromised devices/keyboards are outside any claim of key confidentiality.
+  The user can intentionally copy/save a plaintext backup; the device clipboard and destination
+  file must be treated as sensitive. This APK is debug-signed and debuggable.
+- RPC supplies trusted chain/UTXO/history data. There is no SPV/prevout proof verification,
+  authenticated genesis binding or complete native/legacy reorg/history assurance.
+- Uncertain broadcasts remain conservatively locked. Safe reconciliation/unlocking UI is
+  not implemented; explicit rejection or a network timeout can temporarily immobilize inputs.
+  The retained raw outbox is not a complete multi-transaction reconciliation engine.
+- PIN throttling assumes the OS clock/storage are not controlled by an attacker; device
+  credentials remain mandatory. This is not a defense against arbitrary code execution.
+- Four public dependency/version pairs were queried against OSV. An empty response is not
+  a complete transitive-dependency audit or a guarantee that no vulnerability exists.
+- No independent side-channel analysis, mobile penetration test, release signing ceremony,
+  reproducible-build attestation, store review or cloud CI run has been completed.
+- AGP 8.5.1 warns about SDK 36 being newer than its tested range. Lint warnings and full
+  accessibility/localization coverage require release triage; successful builds are not certification.
+
+No production Core, pool, network configuration or real-funds transaction is changed by this work.
+All transaction acceptance tests use a fresh, peer-isolated localhost regtest and public test seeds.

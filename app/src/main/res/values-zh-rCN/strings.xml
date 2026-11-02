@@ -135,4 +135,14 @@
     <string name="settings_about">关于</string>
     <string name="settings_version">Q-BitX 钱包 v1.4.6</string>
     <string name="settings_subtitle">后量子轻钱包 · Dilithium3 / ML-DSA-65</string>
+    <string name="seed_title">您的助记词。您的钱包。</string>
+    <string name="seed_instruction">请按顺序将这24个单词抄写在纸上。它们可用于恢复QBX钱包。请离线保存，切勿分享。</string>
+    <string name="seed_written">我已记下全部24个单词</string>
+    <string name="seed_check_instruction">请输入第4、12和20个单词，以空格分隔。</string>
+    <string name="seed_confirm">确认备份</string>
+    <string name="seed_open">打开钱包</string>
+    <string name="seed_show_again">再次显示单词</string>
+    <string name="seed_format">恢复格式：qbx-pqhd-v1 · 无额外口令</string>
+    <string name="receive_show_legacy">显示旧版地址（M…）</string>
+    <string name="receive_show_native">显示原生PQ地址（dil1q…）</string>
 </resources>

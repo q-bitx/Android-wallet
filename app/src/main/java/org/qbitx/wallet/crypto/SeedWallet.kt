@@ -13,10 +13,37 @@ object SeedWallet {
     const val VERSION = "qbx-pqhd-v1"
     private val words: List<String> by lazy {
         SeedWallet::class.java.getResourceAsStream("/bip39-english.txt")!!
-            .bufferedReader().use { it.readLines() }.also { require(it.size == 2048) }
+            .bufferedReader().use { it.readLines() }.also {
+                require(it.size == 2048 && it == it.sorted() && it.distinct().size == 2048)
+                val digest = MessageDigest.getInstance("SHA-256").digest(it.joinToString("\n", postfix = "\n").toByteArray(Charsets.UTF_8))
+                require(AddressUtils.toHex(digest) == "2f5eed53a4727b4bf8880d8f3f199efc90e58503646d9ff8eff3a2ed3b24dbda") { "Invalid BIP39 word list" }
+            }
     }
-    fun normalize(text: String): String = Normalizer.normalize(text.trim(), Normalizer.Form.NFKD)
-        .split(Regex("\\s+")).joinToString(" ")
+    fun normalize(text: String): String {
+        require(text.length <= 4096) { "Seed input is too long" }
+        return Normalizer.normalize(text, Normalizer.Form.NFKD).trim()
+            .split(Regex("\\s+")).joinToString(" ")
+    }
+
+    /** A file backup carries recovery metadata; plain 24-word import always means v1. */
+    fun backupEnvelope(backup: String): String {
+        if (backup.contains(":")) return backup // Existing raw-key format.
+        val text = validate(backup)
+        return com.google.gson.JsonObject().apply {
+            addProperty("format", "qbx-seed-backup")
+            addProperty("version", 1)
+            addProperty("derivation", VERSION)
+            addProperty("mnemonic", text)
+        }.toString()
+    }
+
+    fun readBackupEnvelope(text: String): String {
+        require(text.length <= 8192) { "Backup is too large" }
+        val json = com.google.gson.JsonParser.parseString(text).asJsonObject
+        require(json.get("format")?.asString == "qbx-seed-backup" && json.get("version")?.toString() == "1" &&
+            json.get("derivation")?.asString == VERSION) { "Unsupported backup recovery format" }
+        return validate(json.get("mnemonic")?.asString ?: error("Missing seed"))
+    }
 
     fun generate(): String {
         val entropy = ByteArray(32).also { SecureRandom().nextBytes(it) }

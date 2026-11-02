@@ -1,36 +1,71 @@
 package org.qbitx.wallet.ui
 
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import org.qbitx.wallet.R
+import org.qbitx.wallet.ui.theme.*
 
 @Composable
 fun SeedBackupScreen(seed: String, onConfirmed: () -> Unit) {
     var checking by remember(seed) { mutableStateOf(false) }
     var answers by remember(seed) { mutableStateOf("") }
     val words = seed.split(' ')
-    Surface(modifier = Modifier.fillMaxSize()) {
-        Column(Modifier.safeDrawingPadding().padding(24.dp).verticalScroll(rememberScrollState()),
+    val fontScale=LocalDensity.current.fontScale
+    val width=LocalConfiguration.current.screenWidthDp
+    val columns=when { fontScale>=1.6f || width<320 -> 1; fontScale>1.15f || width<380 -> 2; else -> 3 }
+    Surface(modifier = Modifier.fillMaxSize(), color = QBXBackground) {
+        Column(Modifier.safeDrawingPadding().padding(20.dp).verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(16.dp)) {
-            Text("Back up your wallet", style = MaterialTheme.typography.headlineMedium)
-            Text("Write all 24 words on paper in order. These words control your QBX. Keep them offline and private. Recovery format: qbx-pqhd-v1; empty BIP39 passphrase.")
+            QbxBrand()
+            HorizontalDivider(color=QBXDivider)
+            Text("SEED / 24 WORDS", fontFamily=FontFamily.Monospace, fontSize=10.sp, letterSpacing=2.sp, color=QBXMint)
+            Text(stringResource(R.string.seed_title), style=MaterialTheme.typography.headlineMedium)
+            Text(stringResource(R.string.seed_instruction), color=QBXOnSurfaceDim, style=MaterialTheme.typography.bodyMedium)
             if (!checking) {
-                Text(words.mapIndexed { i, w -> "${i+1}. $w" }.joinToString("\n"), fontFamily = FontFamily.Monospace)
-                Button(onClick = { checking = true }) { Text("I wrote down all 24 words") }
-            } else {
-                Text("Enter words 4, 12 and 20, separated by spaces.")
-                OutlinedTextField(value = answers, onValueChange = { answers = it }, label = { Text("Confirm backup") })
-                Button(onClick = onConfirmed,
-                    enabled = answers.trim().split(Regex("\\s+")) == listOf(words[3], words[11], words[19])) {
-                    Text("Open wallet")
+                Column(verticalArrangement=Arrangement.spacedBy(8.dp)) {
+                    words.chunked(columns).forEachIndexed { row, group ->
+                        Row(horizontalArrangement=Arrangement.spacedBy(8.dp),modifier=Modifier.fillMaxWidth()) {
+                            group.forEachIndexed { column, word ->
+                                Surface(color=QBXSurface,modifier=Modifier.weight(1f)
+                                    .border(1.dp,QBXDivider,RoundedCornerShape(8.dp)),shape=RoundedCornerShape(8.dp)) {
+                                    Row(Modifier.padding(horizontal=10.dp,vertical=12.dp),horizontalArrangement=Arrangement.spacedBy(7.dp)) {
+                                        Text("${row*columns+column+1}",fontFamily=FontFamily.Monospace,fontSize=10.sp,color=QBXOnSurfaceDim)
+                                        Text(word,fontFamily=FontFamily.Monospace,fontSize=13.sp,fontWeight=FontWeight.Medium,color=QBXOnSurface)
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
-                TextButton(onClick = { checking = false; answers = "" }) { Text("Show words again") }
+                Button(onClick={checking=true},modifier=Modifier.fillMaxWidth().height(52.dp),shape=RoundedCornerShape(8.dp)) {
+                    Text(stringResource(R.string.seed_written))
+                }
+            } else {
+                Text(stringResource(R.string.seed_check_instruction),color=QBXOnSurface)
+                OutlinedTextField(value=answers,onValueChange={answers=it},modifier=Modifier.fillMaxWidth(),
+                    label={Text(stringResource(R.string.seed_confirm))},keyboardOptions=KeyboardOptions(autoCorrect=false,keyboardType=androidx.compose.ui.text.input.KeyboardType.Password),
+                    shape=RoundedCornerShape(8.dp))
+                Button(onClick=onConfirmed,modifier=Modifier.fillMaxWidth().height(52.dp),shape=RoundedCornerShape(8.dp),
+                    enabled=answers.trim().split(Regex("\\s+"))==listOf(words[3],words[11],words[19])) {
+                    Text(stringResource(R.string.seed_open))
+                }
+                TextButton(onClick={checking=false;answers=""}) { Text(stringResource(R.string.seed_show_again)) }
             }
+            Text(stringResource(R.string.seed_format),fontFamily=FontFamily.Monospace,fontSize=10.sp,color=QBXOnSurfaceDim)
         }
     }
 }

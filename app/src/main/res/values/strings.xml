@@ -135,4 +135,14 @@
     <string name="settings_about">About</string>
     <string name="settings_version">Q-BitX Wallet v1.4.6</string>
     <string name="settings_subtitle">Post-Quantum Light Wallet · Dilithium3 / ML-DSA-65</string>
+    <string name="seed_title">Your words. Your wallet.</string>
+    <string name="seed_instruction">Write these 24 words on paper, in order. They restore your QBX wallet. Keep them offline and never share them.</string>
+    <string name="seed_written">I wrote down all 24 words</string>
+    <string name="seed_check_instruction">Enter words 4, 12 and 20, separated by spaces.</string>
+    <string name="seed_confirm">Confirm your backup</string>
+    <string name="seed_open">Open wallet</string>
+    <string name="seed_show_again">Show words again</string>
+    <string name="seed_format">Recovery: qbx-pqhd-v1 · no passphrase</string>
+    <string name="receive_show_legacy">Show legacy address (M…)</string>
+    <string name="receive_show_native">Show native PQ address (dil1q…)</string>
 </resources>

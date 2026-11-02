@@ -11,10 +11,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 
 private val QBXColorScheme = darkColorScheme(
-    primary = QBXPurple,
-    onPrimary = QBXOnSurface,
+    primary = QBXMint,
+    onPrimary = QBXInk,
     secondary = QBXBlue,
-    onSecondary = QBXOnSurface,
+    onSecondary = QBXInk,
     tertiary = QBXCyan,
     background = QBXBackground,
     surface = QBXSurface,

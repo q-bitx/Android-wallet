@@ -30,16 +30,18 @@ class NativeRecoveryTest {
 
     @Test fun encryptedWalletSurvivesManagerRecreation() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
-        val first = KeyManager(context)
+        val prefs = auditPreferences()
+        val first = KeyManager(context,prefs)
         val created = first.createWallet("test-only")
         val seed = first.exportSeed()!!
-        val restarted = KeyManager(context)
+        val restarted = KeyManager(context,prefs)
         assertEquals(created.address, restarted.getAddress())
         assertEquals(seed, restarted.exportSeed())
+        restarted.deleteWallet(created.id)
         val recovered = restarted.restoreSeed(seed,"restored-test")
         assertEquals(created.address,recovered.address)
         val message = "offline recovery test".toByteArray()
         assertTrue(restarted.verify(restarted.sign(message)!!,message))
-        restarted.deleteWallet(created.id); restarted.deleteWallet(recovered.id)
+        restarted.deleteWallet(recovered.id)
     }
 }

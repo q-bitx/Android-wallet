@@ -135,4 +135,14 @@
     <string name="settings_about">О приложении</string>
     <string name="settings_version">Q-BitX Кошелёк v1.4.6</string>
     <string name="settings_subtitle">Постквантовый лёгкий кошелёк · Dilithium3 / ML-DSA-65</string>
+    <string name="seed_title">Ваши слова. Ваш кошелёк.</string>
+    <string name="seed_instruction">Запишите эти 24 слова на бумаге по порядку. Они восстанавливают кошелёк QBX. Храните их офлайн и никому не сообщайте.</string>
+    <string name="seed_written">Все 24 слова записаны</string>
+    <string name="seed_check_instruction">Введите слова 4, 12 и 20 через пробел.</string>
+    <string name="seed_confirm">Проверка резервной копии</string>
+    <string name="seed_open">Открыть кошелёк</string>
+    <string name="seed_show_again">Показать слова ещё раз</string>
+    <string name="seed_format">Восстановление: qbx-pqhd-v1 · без парольной фразы</string>
+    <string name="receive_show_legacy">Показать legacy-адрес (M…)</string>
+    <string name="receive_show_native">Показать native PQ-адрес (dil1q…)</string>
 </resources>
