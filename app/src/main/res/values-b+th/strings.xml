@@ -113,7 +113,7 @@
     <string name="settings_new_wallet">บัญชีใหม่</string>
     <string name="settings_rename_wallet">เปลี่ยนชื่อกระเป๋าเงิน</string>
     <string name="settings_about">เกี่ยวกับ</string>
-    <string name="settings_version">Q-BitX Wallet v1.6.9</string>
+    <string name="settings_version">Q-BitX Wallet v1.6.10</string>
     <string name="settings_subtitle">กระเป๋าเงินแบบเบาต้านทานควอนตัม · Dilithium3 / ML-DSA-65</string>
     <string name="seed_title">คำของคุณ กระเป๋าเงินของคุณ</string>
     <string name="seed_instruction">จดคำทั้ง 24 คำลงกระดาษตามลำดับ คำเหล่านี้ใช้กู้คืนกระเป๋าเงิน QBX เก็บไว้แบบออฟไลน์และห้ามเปิดเผยให้ใคร</string>
@@ -186,4 +186,6 @@
     <string name="address_all_wallets">กระเป๋าเงินทั้งหมด</string>
     <string name="address_balance_order">ยอดคงเหลือที่ใช้ได้จากมากไปน้อย แตะที่อยู่เพื่อรับ</string>
     <string name="tx_unknown">ไม่สามารถตรวจสอบสถานะได้</string>
+    <string name="fee_recommended">แนะนำ</string>
+    <string name="fee_equal_estimates">ค่าธรรมเนียมเครือข่ายที่ประเมินได้เท่ากันจะรวมเป็นตัวเลือกเดียว</string>
 </resources>

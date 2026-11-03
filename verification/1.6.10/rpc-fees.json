@@ -1,0 +1,23 @@
+{
+  "estimatesmartfee[25]": {
+    "feerate": 5e-05,
+    "blocks": 25
+  },
+  "estimatesmartfee[6]": {
+    "feerate": 5e-05,
+    "blocks": 6
+  },
+  "estimatesmartfee[2]": {
+    "feerate": 5e-05,
+    "blocks": 2
+  },
+  "getmempoolinfo[]": {
+    "size": 2,
+    "mempoolminfee": 1e-05,
+    "minrelaytxfee": 1e-05
+  },
+  "getnetworkinfo[]": {
+    "relayfee": 1e-05,
+    "incrementalfee": 1e-05
+  }
+}

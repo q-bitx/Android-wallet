@@ -113,7 +113,7 @@
     <string name="settings_new_wallet">नया बटुआ</string>
     <string name="settings_rename_wallet">वॉलेट का नाम बदलें</string>
     <string name="settings_about">के बारे में</string>
-    <string name="settings_version">Q-BitX Wallet v1.6.9</string>
+    <string name="settings_version">Q-BitX Wallet v1.6.10</string>
     <string name="settings_subtitle">पोस्ट-क्वांटम लाइट वॉलेट · ​​Dilithium3 / ML-DSA-65</string>
     <string name="seed_title">आपके शब्द. आपका बटुआ.</string>
     <string name="seed_instruction">इन 24 शब्दों को क्रम से कागज पर लिखें। वे आपके QBX वॉलेट को पुनर्स्थापित करते हैं। उन्हें ऑफ़लाइन रखें और कभी साझा न करें.</string>
@@ -186,4 +186,6 @@
     <string name="address_all_wallets">सभी वॉलेट</string>
     <string name="address_balance_order">उपलब्ध शेष: अधिक से कम। प्राप्त करने के लिए पता चुनें।</string>
     <string name="tx_unknown">स्थिति उपलब्ध नहीं</string>
+    <string name="fee_recommended">अनुशंसित</string>
+    <string name="fee_equal_estimates">समान नेटवर्क शुल्क अनुमानों को एक विकल्प में जोड़ा गया है।</string>
 </resources>

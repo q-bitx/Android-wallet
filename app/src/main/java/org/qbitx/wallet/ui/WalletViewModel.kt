@@ -23,6 +23,7 @@ import org.qbitx.wallet.data.WalletInfo
 import org.qbitx.wallet.network.NodeRpcClient
 import org.qbitx.wallet.network.RpcException
 import org.qbitx.wallet.network.TxDetail
+import org.qbitx.wallet.network.FeeRates
 
 data class WalletUiState(
     val pendingSendSummary: String? = null,
@@ -570,11 +571,7 @@ class WalletViewModel(application: Application) : AndroidViewModel(application) 
                 }
 
                 val state = _uiState.value
-                val feeRate = when (feePolicy) {
-                    "low" -> state.feeLow.toLong().coerceAtLeast(1L)
-                    "high" -> state.feeHigh.toLong().coerceAtLeast(1L)
-                    else -> state.feeNormal.toLong().coerceAtLeast(1L)
-                }
+                val feeRate = FeeRates.forPolicy(feePolicy,state.feeLow,state.feeNormal,state.feeHigh)
                 val amountSat = java.math.BigDecimal.valueOf(amount).movePointRight(8).longValueExact()
 
                 data class PlannedBatch(

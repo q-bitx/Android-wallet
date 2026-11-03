@@ -113,7 +113,7 @@
     <string name="settings_new_wallet">New Wallet</string>
     <string name="settings_rename_wallet">Rename Wallet</string>
     <string name="settings_about">About</string>
-    <string name="settings_version">Q-BitX Wallet v1.6.9</string>
+    <string name="settings_version">Q-BitX Wallet v1.6.10</string>
     <string name="settings_subtitle">Post-Quantum Light Wallet · Dilithium3 / ML-DSA-65</string>
     <string name="seed_title">Your words. Your wallet.</string>
     <string name="seed_instruction">Write these 24 words on paper, in order. They restore your QBX wallet. Keep them offline and never share them.</string>
@@ -186,4 +186,6 @@
     <string name="address_all_wallets">All wallets</string>
     <string name="address_balance_order">Spendable balance: highest first. Tap an address to receive.</string>
     <string name="tx_unknown">Status unavailable</string>
+    <string name="fee_recommended">Recommended</string>
+    <string name="fee_equal_estimates">Equal network fee estimates are combined into one option.</string>
 </resources>

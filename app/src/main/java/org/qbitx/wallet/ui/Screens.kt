@@ -29,6 +29,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import org.qbitx.wallet.R
 import org.qbitx.wallet.crypto.AmountInput
+import org.qbitx.wallet.network.FeeRates
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -906,13 +907,17 @@ fun SendScreen(
             // Fee policy
             Text(stringResource(R.string.send_fees), fontSize = 13.sp, fontWeight = FontWeight.Medium, color = QBXOnSurfaceDim)
             Spacer(Modifier.height(10.dp))
+            val feeChoices = FeeRates.choices(state.feeLow,state.feeNormal,state.feeHigh)
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
-                listOf(
-                    Triple("low", stringResource(R.string.fee_low), "%.1f sat/vB".format(state.feeLow)),
-                    Triple("normal", stringResource(R.string.fee_normal), "%.1f sat/vB".format(state.feeNormal)),
-                    Triple("high", stringResource(R.string.fee_high), "%.1f sat/vB".format(state.feeHigh))
-                ).forEach { (key, label, sub) ->
-                    val selected = feePolicy == key
+                feeChoices.forEach { choice ->
+                    val key=choice.policy
+                    val label=stringResource(if(choice.policies.size>1) R.string.fee_recommended else when(key) {
+                        "low" -> R.string.fee_low
+                        "high" -> R.string.fee_high
+                        else -> R.string.fee_normal
+                    })
+                    val sub="${choice.rate} sat/vB"
+                    val selected = feePolicy in choice.policies
                     Column(
                         modifier = Modifier
                             .weight(1f)
@@ -923,7 +928,7 @@ fun SendScreen(
                                 if (selected) QBXMint else QBXDivider,
                                 RoundedCornerShape(8.dp)
                             )
-                            .clickable { feePolicy = key }
+                            .testTag("fee_choice_$key").clickable { feePolicy = key }
                             .padding(vertical = 14.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
@@ -939,6 +944,10 @@ fun SendScreen(
                 }
             }
 
+            if(feeChoices.size<3) {
+                Spacer(Modifier.height(8.dp))
+                Text(stringResource(R.string.fee_equal_estimates),fontSize=12.sp,color=QBXOnSurfaceDim)
+            }
             Spacer(Modifier.height(28.dp))
 
             // Send button
@@ -1057,7 +1066,7 @@ fun SendScreen(
                         Text(stringResource(R.string.confirm_amount), fontSize = 12.sp, color = QBXOnSurfaceDim)
                         Text("$amount QBX", fontWeight = FontWeight.Bold, fontSize = 18.sp, color = QBXMint)
                         Spacer(Modifier.height(4.dp))
-                        Text(stringResource(R.string.confirm_fees, feePolicy), fontSize = 12.sp, color = QBXOnSurfaceDim)
+                        Text(stringResource(R.string.confirm_fees, "${FeeRates.forPolicy(feePolicy,state.feeLow,state.feeNormal,state.feeHigh)} sat/vB"), fontSize = 12.sp, color = QBXOnSurfaceDim)
                     }
                 },
                 confirmButton = {

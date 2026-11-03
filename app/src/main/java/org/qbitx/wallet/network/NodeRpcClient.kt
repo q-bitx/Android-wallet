@@ -263,9 +263,10 @@ class NodeRpcClient(
         return try {
             val result = call("estimatesmartfee", confTarget)
             val obj = result.getAsJsonObject("result") ?: return null
-            val feeRateBtcKb = obj.get("feerate")?.asDouble ?: return null
-            // Convert BTC/kB to sat/vB: BTC/kB * 1e8 / 1000
-            feeRateBtcKb * 1e8 / 1000.0
+            val feePerKvB = obj.get("feerate")?.asBigDecimal ?: return null
+            // Exact QBX/kvB -> sat/vB conversion avoids a floating-point overshoot before ceil.
+            FeeRates.fromCoinsPerKvB(feePerKvB)
+        } catch (e: kotlinx.coroutines.CancellationException) { throw e
         } catch (_: Exception) {
             null
         }
@@ -284,9 +285,9 @@ class NodeRpcClient(
         val norm = normDef.await() ?: 5.0
         val low  = lowDef.await()  ?: 1.0
         Triple(
-            low.coerceAtLeast(1.0),
-            norm.coerceAtLeast(1.0),
-            high.coerceAtLeast(1.0)
+            FeeRates.effective(low,1).toDouble(),
+            FeeRates.effective(norm,5).toDouble(),
+            FeeRates.effective(high,15).toDouble()
         )
     }
 

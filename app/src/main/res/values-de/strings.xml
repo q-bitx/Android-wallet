@@ -113,7 +113,7 @@
     <string name="settings_new_wallet">Neue Geldbörse</string>
     <string name="settings_rename_wallet">Wallet umbenennen</string>
     <string name="settings_about">Um</string>
-    <string name="settings_version">Q-BitX Wallet v1.6.9</string>
+    <string name="settings_version">Q-BitX Wallet v1.6.10</string>
     <string name="settings_subtitle">Post-Quantum Light Wallet · Dilithium3 / ML-DSA-65</string>
     <string name="seed_title">Deine Worte. Ihr Portemonnaie.</string>
     <string name="seed_instruction">Schreiben Sie diese 24 Wörter der Reihe nach auf Papier. Sie stellen Ihr QBX-Wallet wieder her. Halten Sie sie offline und geben Sie sie niemals weiter.</string>
@@ -186,4 +186,6 @@
     <string name="address_all_wallets">Alle Wallets</string>
     <string name="address_balance_order">Verfügbares Guthaben: absteigend. Zum Empfangen eine Adresse antippen.</string>
     <string name="tx_unknown">Status nicht verfügbar</string>
+    <string name="fee_recommended">Empfohlen</string>
+    <string name="fee_equal_estimates">Gleiche Gebührenschätzungen werden zu einer Option zusammengefasst.</string>
 </resources>

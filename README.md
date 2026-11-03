@@ -21,7 +21,19 @@ See SECURITY_REVIEW.md, DESIGN_SYSTEM.md and the separate delivered audit report
 - Single-transaction payments, maximum fee 0.1 QBX. Smaller payments may be needed for
   wallets with many inputs. An ambiguous broadcast timeout must not be retried blindly.
 
-## Download 1.6.9
+## Download 1.6.10
+
+[Download APK](https://github.com/q-bitx/Android-wallet/releases/download/v1.6.10-fee-options-preview/QBitX-Android-1.6.10-fee-options-preview.apk)
+
+[Release and verification report](https://github.com/q-bitx/Android-wallet/releases/tag/v1.6.10-fee-options-preview)
+
+Equal network fee estimates are combined into one recommended option instead of
+showing identical Low/Normal/High choices. Different applicable rates remain separate.
+The displayed rate, confirmation dialog and planner use the same integral sat/vB rate.
+RPC unit conversion uses decimal arithmetic before rounding, avoiding floating-point
+overshoot. The final exact-fee approval remains in place.
+
+## Previous 1.6.9
 
 [Download APK](https://github.com/q-bitx/Android-wallet/releases/download/v1.6.9-history-status-preview/QBitX-Android-1.6.9-history-status-preview.apk)
 
